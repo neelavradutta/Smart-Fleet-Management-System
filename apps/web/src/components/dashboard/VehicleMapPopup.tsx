@@ -9,19 +9,19 @@ import type { MapVehicle } from "./VehicleMap";
 const STATUS = {
   active: {
     fill: "#16a34a",
-    soft: "#dcfce7",
+    soft: "#c8f0d8",
     ink: "#14532d",
     label: "Active",
   },
   idle: {
     fill: "#dc2626",
-    soft: "#fee2e2",
+    soft: "#f8c9c9",
     ink: "#7f1d1d",
     label: "Idle",
   },
   offline: {
     fill: "#475569",
-    soft: "#e2e8f0",
+    soft: "#d5dbe6",
     ink: "#1e293b",
     label: "Offline",
   },
