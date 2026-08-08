@@ -1,13 +1,30 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import { motion } from "framer-motion";
+import { useMap } from "react-leaflet";
 import { AnimatedNumber } from "@/components/common/AnimatedNumber";
 import type { MapVehicle } from "./VehicleMap";
 
 const STATUS = {
-  active: { fill: "#16a34a", label: "Active" },
-  idle: { fill: "#d97706", label: "Idle" },
-  offline: { fill: "#64748b", label: "Offline" },
+  active: {
+    fill: "#16a34a",
+    soft: "#dcfce7",
+    ink: "#14532d",
+    label: "Active",
+  },
+  idle: {
+    fill: "#d97706",
+    soft: "#fef3c7",
+    ink: "#78350f",
+    label: "Idle",
+  },
+  offline: {
+    fill: "#475569",
+    soft: "#e2e8f0",
+    ink: "#1e293b",
+    label: "Offline",
+  },
 } as const;
 
 const R = 18;
@@ -129,11 +146,70 @@ function formatEta(minutes: number | null | undefined): {
   };
 }
 
+function CloseButton() {
+  const map = useMap();
+
+  return (
+    <motion.button
+      type="button"
+      className="sf-popup-close"
+      aria-label="Close"
+      initial={{ opacity: 0, scale: 0.5, rotate: -90 }}
+      animate={{ opacity: 1, scale: 1, rotate: 0 }}
+      whileHover={{ scale: 1.08, rotate: 90 }}
+      whileTap={{ scale: 0.88, rotate: 180 }}
+      transition={{ type: "spring", stiffness: 420, damping: 18 }}
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        map.closePopup();
+      }}
+    >
+      <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden>
+        <path
+          d="M3.5 3.5l9 9M12.5 3.5l-9 9"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+        />
+      </svg>
+    </motion.button>
+  );
+}
+
+function MetaChip({
+  children,
+  delay,
+  tone,
+}: {
+  children: string;
+  delay: number;
+  tone: "dark" | "sky" | "amber";
+}) {
+  return (
+    <motion.span
+      className={`sf-popup-chip sf-popup-chip--${tone}`}
+      initial={{ opacity: 0, y: 6, scale: 0.9 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ delay, type: "spring", stiffness: 380, damping: 20 }}
+    >
+      {children}
+    </motion.span>
+  );
+}
+
 export function VehicleMapPopup({ vehicle }: { vehicle: MapVehicle }) {
   const status = vehicle.status ?? "active";
+  const theme = STATUS[status];
   const speed = Math.max(0, vehicle.speed ?? 0);
   const dist = Math.max(0, vehicle.distanceKm ?? 0);
   const eta = formatEta(vehicle.etaMinutes);
+
+  const chips: { text: string; tone: "dark" | "sky" | "amber" }[] = [];
+  if (vehicle.vehicleType) chips.push({ text: vehicle.vehicleType, tone: "dark" });
+  if (vehicle.makeModel) chips.push({ text: vehicle.makeModel, tone: "sky" });
+  if (vehicle.plate) chips.push({ text: vehicle.plate, tone: "amber" });
 
   return (
     <motion.div
@@ -142,42 +218,59 @@ export function VehicleMapPopup({ vehicle }: { vehicle: MapVehicle }) {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ type: "spring", stiffness: 360, damping: 24 }}
     >
-      <div className="sf-popup-top">
-        <div className="sf-popup-id-row">
-          <motion.p
-            className="sf-popup-title"
-            initial={{ opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ type: "spring", stiffness: 300 }}
-          >
-            {vehicle.label}
-          </motion.p>
-          <motion.span
-            className="sf-popup-status"
-            style={{ background: STATUS[status].fill }}
-            initial={{ scale: 0.6, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", stiffness: 420, damping: 16 }}
-          >
-            {STATUS[status].label}
-          </motion.span>
+      <div
+        className="sf-popup-top"
+        style={
+          {
+            "--sf-status": theme.fill,
+            "--sf-status-soft": theme.soft,
+            "--sf-status-ink": theme.ink,
+          } as CSSProperties
+        }
+      >
+        <div className="sf-popup-accent" aria-hidden />
+        <div className="sf-popup-head">
+          <div className="sf-popup-id-row">
+            <motion.p
+              className="sf-popup-title"
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              {vehicle.label}
+            </motion.p>
+            <motion.span
+              className="sf-popup-status"
+              style={{ background: theme.fill }}
+              initial={{ scale: 0.6, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 420, damping: 16 }}
+            >
+              {theme.label}
+            </motion.span>
+          </div>
         </div>
-        <motion.p
-          className="sf-popup-sub"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.1 }}
-        >
-          {[vehicle.vehicleType, vehicle.makeModel, vehicle.plate]
-            .filter(Boolean)
-            .join(" · ") || "En route"}
-        </motion.p>
+        <CloseButton />
+
+        <div className="sf-popup-chips">
+          {chips.length > 0 ? (
+            chips.map((chip, i) => (
+              <MetaChip key={chip.text} delay={0.08 + i * 0.05} tone={chip.tone}>
+                {chip.text}
+              </MetaChip>
+            ))
+          ) : (
+            <MetaChip delay={0.08} tone="sky">
+              En route
+            </MetaChip>
+          )}
+        </div>
       </div>
 
       <div className="sf-popup-gauges">
         <Gauge
           progress={Math.min(1, speed / 80)}
-          color={STATUS[status].fill}
+          color={theme.fill}
           value={speed}
           unit="km/h"
           label="Speed"

@@ -249,7 +249,12 @@ export function VehicleMap({
                     : 200
               }
             >
-              <Popup className="sf-map-popup" autoPan={false} maxWidth={260}>
+              <Popup
+                className="sf-map-popup"
+                autoPan={false}
+                maxWidth={280}
+                closeButton={false}
+              >
                 <VehicleMapPopup vehicle={vehicle} />
               </Popup>
               <Tooltip direction="top" offset={[0, -12]} opacity={0.95}>
