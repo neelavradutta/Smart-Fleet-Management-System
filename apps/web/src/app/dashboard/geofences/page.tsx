@@ -50,7 +50,6 @@ export default function GeofencesPage() {
     <div className="space-y-6">
       <PageHero
         theme="mint"
-        chip="Zones"
         title="Geofences"
         subtitle="Restricted zones fire CRITICAL alerts on entry."
       />

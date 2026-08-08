@@ -106,7 +106,6 @@ export default function ShipmentsPage() {
     <div className="space-y-6">
       <PageHero
         theme="coral"
-        chip="Logistics"
         title="Shipments"
         subtitle="Create, advance status — track opens as a soft overlay."
       />

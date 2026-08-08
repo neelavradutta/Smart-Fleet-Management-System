@@ -193,7 +193,6 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <PageHero
         theme="sky"
-        chip="Operations · real-time"
         title="Fleet overview"
         subtitle={`${user?.fleetName ?? "Fleet"} · map updates every ~3s · WS ${connected ? "live" : "connecting…"}`}
       />
