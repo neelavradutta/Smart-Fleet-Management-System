@@ -283,7 +283,10 @@
 
 .sf-popup-top {
   position: relative;
-  padding: 10px 10px 9px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 32px 8px 8px;
   border-bottom: 1px solid rgba(203, 213, 225, 0.55);
   background: color-mix(
     in srgb,
@@ -292,13 +295,20 @@
   );
 }
 
+.sf-popup-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin: 0;
+}
+
 .sf-popup-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
-  min-height: 28px;
-  padding-right: 30px;
+  min-height: 0;
+  padding: 0;
 }
 
 .sf-popup-id-row {
@@ -337,8 +347,8 @@
 
 .sf-popup-close {
   position: absolute;
-  top: 6px;
-  right: 6px;
+  top: 8px;
+  right: 8px;
   z-index: 2;
   display: inline-flex;
   align-items: center;
@@ -363,14 +373,6 @@
 .sf-popup-close:focus-visible {
   outline: 2px solid #dc2626;
   outline-offset: 2px;
-}
-
-.sf-popup-chips {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 5px;
-  margin-top: 8px;
 }
 
 .sf-popup-chip {
