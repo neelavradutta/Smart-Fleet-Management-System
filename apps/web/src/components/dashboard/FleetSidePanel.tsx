@@ -18,12 +18,12 @@ const STATUS_META = {
   },
   idle: {
     label: "Idle",
-    dot: "bg-amber-500",
-    ring: "ring-amber-100",
-    text: "text-amber-700",
-    badge: "bg-amber-500 text-black",
+    dot: "bg-red-600",
+    ring: "ring-red-100",
+    text: "text-red-700",
+    badge: "bg-red-600 text-white",
     track: "bg-slate-200",
-    bar: "bg-amber-500",
+    bar: "bg-red-600",
   },
   offline: {
     label: "Off",

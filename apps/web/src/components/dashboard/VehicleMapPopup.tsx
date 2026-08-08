@@ -14,9 +14,9 @@ const STATUS = {
     label: "Active",
   },
   idle: {
-    fill: "#d97706",
-    soft: "#fef3c7",
-    ink: "#78350f",
+    fill: "#dc2626",
+    soft: "#fee2e2",
+    ink: "#7f1d1d",
     label: "Idle",
   },
   offline: {
@@ -185,7 +185,7 @@ function MetaChip({
 }: {
   children: string;
   delay: number;
-  tone: "dark" | "sky" | "amber";
+  tone: "dark" | "blue" | "yellow";
 }) {
   return (
     <motion.span
@@ -206,10 +206,10 @@ export function VehicleMapPopup({ vehicle }: { vehicle: MapVehicle }) {
   const dist = Math.max(0, vehicle.distanceKm ?? 0);
   const eta = formatEta(vehicle.etaMinutes);
 
-  const chips: { text: string; tone: "dark" | "sky" | "amber" }[] = [];
+  const chips: { text: string; tone: "dark" | "blue" | "yellow" }[] = [];
   if (vehicle.vehicleType) chips.push({ text: vehicle.vehicleType, tone: "dark" });
-  if (vehicle.makeModel) chips.push({ text: vehicle.makeModel, tone: "sky" });
-  if (vehicle.plate) chips.push({ text: vehicle.plate, tone: "amber" });
+  if (vehicle.makeModel) chips.push({ text: vehicle.makeModel, tone: "blue" });
+  if (vehicle.plate) chips.push({ text: vehicle.plate, tone: "yellow" });
 
   return (
     <motion.div
@@ -228,7 +228,6 @@ export function VehicleMapPopup({ vehicle }: { vehicle: MapVehicle }) {
           } as CSSProperties
         }
       >
-        <div className="sf-popup-accent" aria-hidden />
         <div className="sf-popup-head">
           <div className="sf-popup-id-row">
             <motion.p
@@ -260,7 +259,7 @@ export function VehicleMapPopup({ vehicle }: { vehicle: MapVehicle }) {
               </MetaChip>
             ))
           ) : (
-            <MetaChip delay={0.08} tone="sky">
+            <MetaChip delay={0.08} tone="blue">
               En route
             </MetaChip>
           )}
@@ -278,16 +277,16 @@ export function VehicleMapPopup({ vehicle }: { vehicle: MapVehicle }) {
         />
         <Gauge
           progress={Math.min(1, Math.max(0.05, 1 - dist / 20))}
-          color="#0ea5e9"
+          color="#2563eb"
           value={dist}
           decimals={1}
           unit="km"
-          label="Left"
+          label="Distance left"
           delay={0.12}
         />
         <Gauge
           progress={eta.progress}
-          color="#f59e0b"
+          color="#eab308"
           value={eta.value}
           decimals={eta.unit === "hr" ? 1 : 0}
           unit={eta.unit === "eta" ? "" : eta.unit}
@@ -295,30 +294,6 @@ export function VehicleMapPopup({ vehicle }: { vehicle: MapVehicle }) {
           delay={0.19}
         />
       </div>
-
-      <motion.div
-        className="sf-popup-foot"
-        initial={{ opacity: 0, y: 4 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.28 }}
-      >
-        <span>
-          {vehicle.latitude.toFixed(4)}, {vehicle.longitude.toFixed(4)}
-        </span>
-        <motion.span
-          key={vehicle.updatedAt ?? "t"}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
-          {vehicle.updatedAt
-            ? new Date(vehicle.updatedAt).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-                second: "2-digit",
-              })
-            : "—"}
-        </motion.span>
-      </motion.div>
     </motion.div>
   );
 }
