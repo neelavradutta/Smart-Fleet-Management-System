@@ -252,7 +252,7 @@
 .sf-map-popup .leaflet-popup-content {
   margin: 0;
   min-width: 0;
-  width: 232px;
+  width: 240px;
 }
 
 .sf-map-popup .leaflet-popup-tip {
@@ -320,48 +320,69 @@
 }
 
 .sf-popup-grid {
+  display: none;
+}
+
+.sf-popup-gauges {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 0;
+  gap: 2px;
+  padding: 8px 4px 6px;
+  background: #fff;
   border-bottom: 1px solid #e2e8f0;
 }
 
-.sf-popup-cell {
-  padding: 7px 6px 6px;
-  text-align: center;
-  border-right: 1px solid #e2e8f0;
+.sf-gauge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
 }
 
-.sf-popup-cell:last-child {
-  border-right: none;
+.sf-gauge-ring {
+  position: relative;
+  width: 52px;
+  height: 52px;
 }
 
-.sf-popup-val {
-  margin: 0;
-  font-size: 13px;
+.sf-gauge-ring svg {
+  display: block;
+  overflow: visible;
+}
+
+.sf-gauge-center {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  line-height: 1;
+}
+
+.sf-gauge-num {
+  font-size: 11px;
   font-weight: 800;
   color: #000;
   font-variant-numeric: tabular-nums;
-  line-height: 1.1;
 }
 
-.sf-popup-val span {
-  font-size: 9px;
+.sf-gauge-unit {
+  margin-top: 1px;
+  font-size: 7px;
   font-weight: 700;
   color: #64748b;
+  text-transform: lowercase;
 }
 
-.sf-popup-val-sm {
-  font-size: 12px;
-}
-
-.sf-popup-key {
-  margin: 2px 0 0;
+.sf-gauge-label {
+  margin: 0;
   font-size: 8px;
-  font-weight: 700;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: #64748b;
+  color: #334155;
 }
 
 .sf-popup-foot {

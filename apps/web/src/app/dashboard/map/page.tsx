@@ -8,6 +8,7 @@ import { FleetSidePanel } from "@/components/dashboard/FleetSidePanel";
 import { Card } from "@/components/common/Card";
 import { Badge } from "@/components/common/Badge";
 import { PageHero } from "@/components/common/PageHero";
+import { DELIVERY_HUBS, etaMinutesFrom, haversineKm } from "@/lib/geo";
 
 type Vehicle = {
   id: string;
@@ -57,23 +58,29 @@ export default function MapPage() {
   const mapVehicles = useMemo(
     () =>
       vehicles
-        .map((v) => {
+        .map((v, idx) => {
           const l = live[v.id];
           const lat = l?.latitude ?? Number(v.currentLatitude);
           const lng = l?.longitude ?? Number(v.currentLongitude);
           if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+          const [dLat, dLng] = DELIVERY_HUBS[idx % DELIVERY_HUBS.length];
+          const speed = l?.speed ?? 0;
+          const distanceKm = Number(haversineKm(lat, lng, dLat, dLng).toFixed(2));
+          const etaMinutes = etaMinutesFrom(distanceKm, speed);
           return {
             id: v.id,
             label: v.vehicleNumber,
             latitude: lat,
             longitude: lng,
-            speed: l?.speed ?? 0,
+            speed,
             heading: l?.heading ?? 0,
             status: mapStatus(v.status),
             vehicleType: v.vehicleType,
             plate: v.licensePlate ?? undefined,
             makeModel: [v.make, v.model].filter(Boolean).join(" ") || undefined,
             updatedAt: l?.timestamp ?? new Date().toISOString(),
+            distanceKm,
+            etaMinutes,
           };
         })
         .filter(Boolean) as {
@@ -84,6 +91,12 @@ export default function MapPage() {
         speed: number;
         heading: number;
         status: "active" | "idle" | "offline";
+        vehicleType?: string;
+        plate?: string;
+        makeModel?: string;
+        updatedAt?: string;
+        distanceKm: number;
+        etaMinutes: number | null;
       }[],
     [vehicles, live],
   );
