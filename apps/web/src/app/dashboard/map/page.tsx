@@ -12,6 +12,10 @@ import { PageHero } from "@/components/common/PageHero";
 type Vehicle = {
   id: string;
   vehicleNumber: string;
+  vehicleType?: string;
+  make?: string | null;
+  model?: string | null;
+  licensePlate?: string | null;
   status: string;
   currentLatitude: string | null;
   currentLongitude: string | null;
@@ -66,6 +70,10 @@ export default function MapPage() {
             speed: l?.speed ?? 0,
             heading: l?.heading ?? 0,
             status: mapStatus(v.status),
+            vehicleType: v.vehicleType,
+            plate: v.licensePlate ?? undefined,
+            makeModel: [v.make, v.model].filter(Boolean).join(" ") || undefined,
+            updatedAt: l?.timestamp ?? new Date().toISOString(),
           };
         })
         .filter(Boolean) as {

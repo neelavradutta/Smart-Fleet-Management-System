@@ -12,6 +12,7 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { VehicleMapPopup } from "./VehicleMapPopup";
 
 export type MapVehicle = {
   id: string;
@@ -21,6 +22,14 @@ export type MapVehicle = {
   speed?: number;
   status?: "active" | "idle" | "offline";
   heading?: number;
+  vehicleType?: string;
+  plate?: string;
+  makeModel?: string;
+  updatedAt?: string;
+  /** Remaining distance to delivery (km) */
+  distanceKm?: number;
+  /** Estimated minutes to delivery */
+  etaMinutes?: number | null;
 };
 
 const STATUS = {
@@ -240,29 +249,12 @@ export function VehicleMap({
                     : 200
               }
             >
-              <Popup className="sf-map-popup" autoPan={false}>
-                <div className="sf-popup-body">
-                  <div className="sf-popup-head">
-                    <p className="sf-popup-title">{vehicle.label}</p>
-                    <span
-                      className="sf-popup-status"
-                      style={{ background: STATUS[status].fill }}
-                    >
-                      {STATUS[status].label}
-                    </span>
-                  </div>
-                  <p className="sf-popup-meta">
-                    <strong>{Math.round(vehicle.speed ?? 0)}</strong> km/h
-                    <span className="sf-popup-sep">·</span>
-                    <span className="sf-popup-coords">
-                      {vehicle.latitude.toFixed(4)},{" "}
-                      {vehicle.longitude.toFixed(4)}
-                    </span>
-                  </p>
-                </div>
+              <Popup className="sf-map-popup" autoPan={false} maxWidth={260}>
+                <VehicleMapPopup vehicle={vehicle} />
               </Popup>
               <Tooltip direction="top" offset={[0, -12]} opacity={0.95}>
-                {vehicle.label} · {Math.round(vehicle.speed ?? 0)} km/h
+                {vehicle.label} · {Math.round(vehicle.speed ?? 0)} km/h ·{" "}
+                {(vehicle.distanceKm ?? 0).toFixed(1)} km left
               </Tooltip>
             </Marker>
           );
