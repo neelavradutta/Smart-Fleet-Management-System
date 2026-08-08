@@ -12,6 +12,7 @@ import { Card } from "@/components/common/Card";
 import { LoadingBlock } from "@/components/common/LoadingBlock";
 import { PageHero } from "@/components/common/PageHero";
 import { PerformanceChart } from "@/components/analytics/PerformanceChart";
+import { DELIVERY_HUBS, etaMinutesFrom, haversineKm } from "@/lib/geo";
 
 type Overview = {
   totalVehicles: number;
@@ -100,17 +101,20 @@ export default function DashboardPage() {
   const mapVehicles = useMemo(
     () =>
       vehicles
-        .map((v) => {
+        .map((v, idx) => {
           const l = live[v.id];
           const lat = l?.latitude ?? Number(v.currentLatitude);
           const lng = l?.longitude ?? Number(v.currentLongitude);
           if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+          const [dLat, dLng] = DELIVERY_HUBS[idx % DELIVERY_HUBS.length];
+          const speed = l?.speed ?? 0;
+          const distanceKm = Number(haversineKm(lat, lng, dLat, dLng).toFixed(2));
           return {
             id: v.id,
             label: v.vehicleNumber,
             latitude: lat,
             longitude: lng,
-            speed: l?.speed ?? 0,
+            speed,
             heading: l?.heading ?? 0,
             status:
               v.status === "ACTIVE"
@@ -122,6 +126,8 @@ export default function DashboardPage() {
             plate: v.licensePlate ?? undefined,
             makeModel: [v.make, v.model].filter(Boolean).join(" ") || undefined,
             updatedAt: l?.timestamp,
+            distanceKm,
+            etaMinutes: etaMinutesFrom(distanceKm, speed),
           };
         })
         .filter(Boolean) as {
@@ -131,6 +137,8 @@ export default function DashboardPage() {
         longitude: number;
         speed: number;
         status: "active" | "idle" | "offline";
+        distanceKm: number;
+        etaMinutes: number | null;
       }[],
     [vehicles, live],
   );
