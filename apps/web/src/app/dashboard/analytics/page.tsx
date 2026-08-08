@@ -139,7 +139,6 @@ export default function AnalyticsPage() {
     <div className="space-y-6">
       <PageHero
         theme="sun"
-        chip="Live insights"
         title="Analytics"
         subtitle="Fleet KPIs stream every ~3s — hover charts, switch windows, watch values glide."
       >

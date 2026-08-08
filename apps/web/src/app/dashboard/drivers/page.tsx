@@ -27,7 +27,6 @@ export default function DriversPage() {
     <div className="space-y-6">
       <PageHero
         theme="lilac"
-        chip="People ops"
         title="Driver performance"
         subtitle="Safety scores, licenses, and behavior monitoring."
       />

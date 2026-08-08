@@ -67,7 +67,6 @@ export default function RoutesPage() {
     <div className="space-y-6">
       <PageHero
         theme="sky"
-        chip="VRP"
         title="Route optimizer"
         subtitle="Multi-stop VRP — OR-Tools or nearest-neighbor fallback."
       >

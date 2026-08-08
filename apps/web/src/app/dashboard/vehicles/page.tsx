@@ -44,7 +44,6 @@ export default function VehiclesPage() {
     <div className="space-y-6">
       <PageHero
         theme="sun"
-        chip="Fleet assets"
         title="Fleet vehicles"
         subtitle="Manage health, fuel, and maintenance across the fleet."
       />

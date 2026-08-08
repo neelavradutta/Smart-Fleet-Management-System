@@ -20,7 +20,6 @@ export default function AlertsPage() {
     <div className="space-y-6 max-w-3xl">
       <PageHero
         theme="coral"
-        chip="Inbox"
         title="Alert inbox"
         subtitle="Geofence, speeding, fuel, maintenance — resolve in place."
       />

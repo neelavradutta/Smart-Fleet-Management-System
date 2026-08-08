@@ -34,7 +34,6 @@ export default function DocumentsPage() {
     <div className="space-y-6">
       <PageHero
         theme="lilac"
-        chip="Compliance"
         title="Document vault"
         subtitle="License / insurance / RC — expiry reminders."
       />
