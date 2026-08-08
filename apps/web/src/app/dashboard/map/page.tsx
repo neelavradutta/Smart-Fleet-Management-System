@@ -84,7 +84,6 @@ export default function MapPage() {
     <div className="space-y-6">
       <PageHero
         theme="mint"
-        chip="GPS · Socket.IO"
         title="Live map"
         subtitle="Full-tile street map with live vehicle tracks"
       >
