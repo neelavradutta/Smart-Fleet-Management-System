@@ -252,7 +252,7 @@
 .sf-map-popup .leaflet-popup-content {
   margin: 0;
   min-width: 0;
-  width: 240px;
+  width: 256px;
 }
 
 .sf-map-popup .leaflet-popup-tip {
@@ -262,61 +262,140 @@
 }
 
 .sf-map-popup a.leaflet-popup-close-button {
-  top: 4px !important;
-  right: 6px !important;
-  width: 16px !important;
-  height: 16px !important;
-  font-size: 14px !important;
-  line-height: 16px !important;
-  color: #64748b !important;
-  padding: 0 !important;
+  display: none !important;
 }
 
 .sf-popup-card {
   font-family: inherit;
   color: #0f172a;
+  overflow: hidden;
 }
 
 .sf-popup-top {
-  padding: 8px 28px 7px 10px;
+  position: relative;
+  padding: 10px 10px 9px 14px;
   border-bottom: 1px solid #e2e8f0;
-  background: #f8fafc;
+  background: var(--sf-status-soft, #f8fafc);
+}
+
+.sf-popup-accent {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--sf-status, #16a34a);
+}
+
+.sf-popup-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 28px;
+  padding-right: 30px;
 }
 
 .sf-popup-id-row {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
 }
 
 .sf-popup-title {
   margin: 0;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 800;
-  letter-spacing: -0.01em;
-  color: #000;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  color: #0f172a;
+  white-space: nowrap;
 }
 
 .sf-popup-status {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  height: 18px;
   border-radius: 4px;
-  padding: 1px 5px;
+  padding: 0 7px;
   font-size: 9px;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
+  line-height: 1;
   color: #fff;
 }
 
-.sf-popup-sub {
-  margin: 3px 0 0;
-  font-size: 10px;
-  font-weight: 600;
-  color: #475569;
+.sf-popup-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  background: #dc2626;
+  color: #fff;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.sf-popup-close:hover {
+  background: #b91c1c;
+}
+
+.sf-popup-close:focus-visible {
+  outline: 2px solid #dc2626;
+  outline-offset: 2px;
+}
+
+.sf-popup-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin-top: 8px;
+}
+
+.sf-popup-chip {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.sf-popup-chip--dark {
+  background: #0f172a;
+  color: #fff;
+}
+
+.sf-popup-chip--sky {
+  background: #0284c7;
+  color: #fff;
+}
+
+.sf-popup-chip--amber {
+  background: #d97706;
+  color: #fff;
 }
 
 .sf-popup-grid {
