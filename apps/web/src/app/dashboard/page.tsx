@@ -25,6 +25,10 @@ type Overview = {
 type Vehicle = {
   id: string;
   vehicleNumber: string;
+  vehicleType?: string;
+  make?: string | null;
+  model?: string | null;
+  licensePlate?: string | null;
   status: string;
   currentLatitude: string | null;
   currentLongitude: string | null;
@@ -35,6 +39,8 @@ type LocUpdate = {
   latitude: number;
   longitude: number;
   speed: number;
+  heading?: number;
+  timestamp?: string;
 };
 
 export default function DashboardPage() {
@@ -105,12 +111,17 @@ export default function DashboardPage() {
             latitude: lat,
             longitude: lng,
             speed: l?.speed ?? 0,
+            heading: l?.heading ?? 0,
             status:
               v.status === "ACTIVE"
                 ? ("active" as const)
                 : v.status === "MAINTENANCE"
                   ? ("idle" as const)
                   : ("offline" as const),
+            vehicleType: v.vehicleType,
+            plate: v.licensePlate ?? undefined,
+            makeModel: [v.make, v.model].filter(Boolean).join(" ") || undefined,
+            updatedAt: l?.timestamp,
           };
         })
         .filter(Boolean) as {
