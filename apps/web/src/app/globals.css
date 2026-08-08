@@ -273,18 +273,9 @@
 
 .sf-popup-top {
   position: relative;
-  padding: 10px 10px 9px 14px;
+  padding: 10px 10px 9px 10px;
   border-bottom: 1px solid #e2e8f0;
   background: var(--sf-status-soft, #f8fafc);
-}
-
-.sf-popup-accent {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: var(--sf-status, #16a34a);
 }
 
 .sf-popup-head {
@@ -388,14 +379,14 @@
   color: #fff;
 }
 
-.sf-popup-chip--sky {
-  background: #0284c7;
+.sf-popup-chip--blue {
+  background: #2563eb;
   color: #fff;
 }
 
-.sf-popup-chip--amber {
-  background: #d97706;
-  color: #fff;
+.sf-popup-chip--yellow {
+  background: #eab308;
+  color: #0f172a;
 }
 
 .sf-popup-grid {
@@ -406,9 +397,8 @@
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 2px;
-  padding: 8px 4px 6px;
+  padding: 8px 4px 8px;
   background: #fff;
-  border-bottom: 1px solid #e2e8f0;
 }
 
 .sf-gauge {
@@ -457,21 +447,12 @@
 
 .sf-gauge-label {
   margin: 0;
+  max-width: 72px;
   font-size: 8px;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
   color: #334155;
-}
-
-.sf-popup-foot {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 5px 10px 6px;
-  font-size: 9px;
-  font-weight: 600;
-  color: #334155;
-  background: #fff;
-  font-variant-numeric: tabular-nums;
+  text-align: center;
+  line-height: 1.2;
 }

@@ -34,7 +34,7 @@ export type MapVehicle = {
 
 const STATUS = {
   active: { fill: "#16a34a", label: "Active" },
-  idle: { fill: "#d97706", label: "Idle" },
+  idle: { fill: "#dc2626", label: "Idle" },
   offline: { fill: "#64748b", label: "Offline" },
 } as const;
 
