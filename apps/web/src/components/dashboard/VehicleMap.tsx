@@ -192,13 +192,15 @@ export function VehicleMap({
         style={{ width: "100%", height: "100%", background: "#dceee0" }}
       >
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>'
+          url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> HOT'
           maxZoom={20}
-          subdomains="abcd"
+          maxNativeZoom={19}
+          subdomains="abc"
           updateWhenIdle={false}
           updateWhenZooming
-          keepBuffer={4}
+          keepBuffer={6}
+          className="sf-map-tiles"
           errorTileUrl="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
         />
 
