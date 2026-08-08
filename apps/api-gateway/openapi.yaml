@@ -1,0 +1,64 @@
+openapi: 3.1.0
+info:
+  title: SFMS API Gateway
+  version: 0.2.0
+  description: Tenant-scoped fleet APIs (always-on host). Web UI on Vercel.
+servers:
+  - url: http://localhost:3001
+paths:
+  /health:
+    get:
+      summary: Liveness
+      responses:
+        "200":
+          description: OK
+  /api/v1/auth/login:
+    post:
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string }
+                password: { type: string }
+      responses:
+        "200":
+          description: JWT session
+  /api/v1/telemetry/gps:
+    post:
+      summary: Ingest GPS
+      security: [{ ApiKey: [] }, { Bearer: [] }]
+      responses:
+        "200":
+          description: Accepted
+  /api/v1/routes/optimize:
+    post:
+      summary: Optimize routes (async job)
+      security: [{ Bearer: [] }]
+      responses:
+        "202":
+          description: Job accepted
+  /api/v1/track/{token}:
+    get:
+      summary: Public shipment tracking
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Tracking payload
+components:
+  securitySchemes:
+    Bearer:
+      type: http
+      scheme: bearer
+    ApiKey:
+      type: apiKey
+      in: header
+      name: x-api-key

@@ -1,0 +1,23 @@
+{
+  "name": "smart-fleet-management-system",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@10.14.0",
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter @sfms/web --filter @sfms/api-gateway run dev",
+    "dev:web": "pnpm --filter @sfms/web dev",
+    "dev:gateway": "pnpm --filter @sfms/api-gateway dev",
+    "dev:worker": "pnpm --filter @sfms/telemetry-worker dev",
+    "build": "pnpm -r run build",
+    "db:generate": "pnpm --filter @sfms/db generate",
+    "db:migrate": "pnpm --filter @sfms/db migrate",
+    "db:seed": "pnpm --filter @sfms/db seed",
+    "test": "pnpm --filter @sfms/shared test",
+    "lint": "pnpm -r run lint",
+    "typecheck": "pnpm -r run typecheck",
+    "loadtest": "k6 run infra/load/telemetry-k6.js"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

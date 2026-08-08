@@ -1,0 +1,11 @@
+{
+  "name": "@sfms/device-sdk",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "echo \"stub sdk\"",
+    "typecheck": "echo \"stub sdk\"",
+    "lint": "echo \"no lint yet\""
+  }
+}

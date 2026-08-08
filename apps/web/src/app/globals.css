@@ -1,0 +1,270 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg: #f7fbff;
+  --color-surface: #ffffff;
+  --color-ink: #0f172a;
+  --color-muted: #64748b;
+  --color-sky: #0ea5e9;
+  --color-mint: #10b981;
+  --color-sun: #f59e0b;
+  --color-coral: #f43f5e;
+  --color-lilac: #8b5cf6;
+  --color-lime: #84cc16;
+  --color-fuchsia: #d946ef;
+  --color-orange: #f97316;
+}
+
+@layer base {
+  html,
+  body {
+    margin: 0;
+    min-height: 100%;
+    background-color: var(--color-bg);
+    background-image:
+      radial-gradient(820px 420px at 5% -5%, rgba(14, 165, 233, 0.22), transparent 55%),
+      radial-gradient(700px 380px at 95% 0%, rgba(16, 185, 129, 0.16), transparent 52%),
+      radial-gradient(640px 340px at 80% 100%, rgba(245, 158, 11, 0.14), transparent 55%),
+      radial-gradient(520px 280px at 0% 85%, rgba(139, 92, 246, 0.12), transparent 50%);
+    background-attachment: fixed;
+    color: var(--color-ink);
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  ::selection {
+    background: rgba(14, 165, 233, 0.28);
+  }
+}
+
+@layer components {
+  .sf-shell {
+    @apply min-h-screen;
+  }
+
+  .sf-panel {
+    @apply rounded-2xl border border-slate-200 bg-white shadow-card;
+  }
+
+  .sf-chip {
+    @apply inline-flex items-center rounded-full bg-sky-100 px-2.5 py-0.5 text-xs font-semibold text-sky-700 border border-sky-200;
+  }
+
+  .sf-chip-mint {
+    @apply inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200;
+  }
+
+  .sf-chip-sun {
+    @apply inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-800 border border-amber-200;
+  }
+
+  .sf-chip-coral {
+    @apply inline-flex items-center rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-semibold text-rose-700 border border-rose-200;
+  }
+
+  .sf-chip-lilac {
+    @apply inline-flex items-center rounded-full bg-violet-100 px-2.5 py-0.5 text-xs font-semibold text-violet-700 border border-violet-200;
+  }
+
+  .sf-accent-bar {
+    height: 4px;
+    width: 100%;
+    background: var(--color-sky);
+  }
+
+  .sf-orb {
+    pointer-events: none;
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(40px);
+    opacity: 0.55;
+    animation: orb-drift 10s ease-in-out infinite;
+  }
+
+  .sf-bar {
+    @apply h-2.5 overflow-hidden rounded-full bg-slate-100;
+  }
+
+  .sf-bar > span {
+    @apply block h-full rounded-full bg-sky-500;
+  }
+
+  .sf-icon-tile {
+    @apply grid place-items-center rounded-2xl shadow-sm;
+  }
+
+  .sf-hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .sf-hide-scrollbar::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@keyframes orb-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(12px, -10px, 0) scale(1.08);
+  }
+}
+
+.sf-map-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 320px;
+  overflow: hidden;
+  border-radius: inherit;
+  isolation: isolate;
+}
+
+.leaflet-container,
+.sf-leaflet {
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 320px;
+  z-index: 0;
+  border-radius: inherit;
+  font-family: inherit;
+  background: #dceee0;
+}
+
+.sf-leaflet .leaflet-tile-pane {
+  will-change: auto;
+}
+
+.sf-leaflet .leaflet-control-zoom a {
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+  width: 34px !important;
+  height: 34px !important;
+  line-height: 34px !important;
+  font-size: 16px !important;
+}
+
+.sf-leaflet .leaflet-control-zoom {
+  border: none !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12) !important;
+  border-radius: 12px !important;
+  overflow: hidden;
+}
+
+.sf-map-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sf-map-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.sf-map-marker {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  filter: drop-shadow(0 4px 8px rgba(15, 23, 42, 0.28));
+}
+
+.sf-map-pin {
+  transform-origin: 50% 70%;
+  transition: transform 0.25s ease;
+}
+
+.sf-map-label {
+  margin-top: -4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #0f172a;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.12);
+}
+
+.sf-map-recenter {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: #ffffff;
+  color: #0369a1;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 8px 22px rgba(14, 165, 233, 0.22);
+  cursor: pointer;
+  margin: 10px;
+  display: block;
+}
+
+.sf-map-recenter:hover {
+  background: #e0f2fe;
+}
+
+.sf-map-popup .leaflet-popup-content-wrapper {
+  border-radius: 14px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
+  border: 1px solid #bae6fd;
+  padding: 0;
+}
+
+.sf-map-popup .leaflet-popup-content {
+  margin: 0;
+  min-width: 160px;
+}
+
+.sf-popup-body {
+  padding: 12px 14px;
+  font-size: 13px;
+  color: #334155;
+}
+
+.sf-popup-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: #0f172a;
+  margin: 0 0 6px;
+}
+
+.sf-popup-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.sf-popup-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.sf-popup-coords {
+  margin-top: 6px;
+  font-size: 11px;
+  color: #64748b;
+}
