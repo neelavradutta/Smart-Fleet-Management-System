@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import {
   MapContainer,
   TileLayer,
@@ -80,39 +80,45 @@ function MapLifecycle({
   const map = useMap();
   const fittedKey = useRef<string>("");
   const vehiclesRef = useRef(vehicles);
+  const lastFocusRef = useRef<string | null>(null);
   vehiclesRef.current = vehicles;
 
   useEffect(() => {
     const el = map.getContainer();
+    let resizeTimer: number | undefined;
     const invalidate = () => {
       map.invalidateSize({ animate: false });
     };
+    const invalidateDebounced = () => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(invalidate, 80);
+    };
 
     invalidate();
-    const t1 = window.setTimeout(invalidate, 50);
-    const t2 = window.setTimeout(invalidate, 250);
-    const t3 = window.setTimeout(invalidate, 600);
+    const t1 = window.setTimeout(invalidate, 80);
+    const t2 = window.setTimeout(invalidate, 300);
 
-    const ro = new ResizeObserver(() => invalidate());
+    const ro = new ResizeObserver(invalidateDebounced);
     ro.observe(el);
     if (el.parentElement) ro.observe(el.parentElement);
 
     const onVis = () => {
       if (document.visibilityState === "visible") invalidate();
     };
-    window.addEventListener("resize", invalidate);
+    window.addEventListener("resize", invalidateDebounced);
     document.addEventListener("visibilitychange", onVis);
 
     return () => {
       window.clearTimeout(t1);
       window.clearTimeout(t2);
-      window.clearTimeout(t3);
+      window.clearTimeout(resizeTimer);
       ro.disconnect();
-      window.removeEventListener("resize", invalidate);
+      window.removeEventListener("resize", invalidateDebounced);
       document.removeEventListener("visibilitychange", onVis);
     };
   }, [map]);
 
+  // Fit once per vehicle set — never on GPS position ticks
   useEffect(() => {
     const idsKey = vehicles
       .map((v) => v.id)
@@ -123,18 +129,25 @@ function MapLifecycle({
       vehicles.map((v) => [v.latitude, v.longitude] as [number, number]),
     );
     map.invalidateSize({ animate: false });
-    map.fitBounds(bounds.pad(0.28), { animate: true, maxZoom: 15 });
+    map.fitBounds(bounds.pad(0.28), { animate: false, maxZoom: 15 });
     fittedKey.current = idsKey;
   }, [vehicles, map]);
 
+  // Fly only when selection changes — not every live GPS update
   useEffect(() => {
-    if (!focusId) return;
-    const v = vehicles.find((x) => x.id === focusId);
+    if (!focusId) {
+      lastFocusRef.current = null;
+      return;
+    }
+    if (lastFocusRef.current === focusId) return;
+    lastFocusRef.current = focusId;
+    const v = vehiclesRef.current.find((x) => x.id === focusId);
     if (!v) return;
     map.flyTo([v.latitude, v.longitude], Math.max(map.getZoom(), 14), {
-      duration: 0.7,
+      duration: 0.55,
+      easeLinearity: 0.25,
     });
-  }, [focusId, vehicles, map]);
+  }, [focusId, map]);
 
   useEffect(() => {
     const ctrl = new L.Control({ position: "topright" });
@@ -172,24 +185,26 @@ export function VehicleMap({
   vehicles: MapVehicle[];
   focusId?: string | null;
 }) {
-  const center = useMemo<[number, number]>(() => {
-    if (!vehicles[0]) return [19.076, 72.877];
-    return [vehicles[0].latitude, vehicles[0].longitude];
-  }, [vehicles]);
+  // Freeze initial center — never rebind to moving GPS (causes camera shake)
+  const initialCenter = useRef<[number, number] | null>(null);
+  if (!initialCenter.current) {
+    initialCenter.current = vehicles[0]
+      ? [vehicles[0].latitude, vehicles[0].longitude]
+      : [19.076, 72.877];
+  }
 
   return (
     <div className="sf-map-shell">
       <MapContainer
-        center={center}
+        center={initialCenter.current}
         zoom={13}
         minZoom={3}
         maxZoom={19}
         scrollWheelZoom
         zoomControl={false}
         attributionControl
-        preferCanvas={false}
         className="sf-leaflet"
-        style={{ width: "100%", height: "100%", background: "#dceee0" }}
+        style={{ width: "100%", height: "100%", background: "#c8d9c4" }}
       >
         <TileLayer
           url="https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
@@ -226,7 +241,7 @@ export function VehicleMap({
                     : 200
               }
             >
-              <Popup className="sf-map-popup" autoPan>
+              <Popup className="sf-map-popup" autoPan={false}>
                 <div className="sf-popup-body">
                   <p className="sf-popup-title">{vehicle.label}</p>
                   <div className="sf-popup-row">
