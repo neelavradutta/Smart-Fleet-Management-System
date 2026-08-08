@@ -37,29 +37,28 @@ function getVehicleIcon(
   heading: number,
 ) {
   const bucket = Math.round(heading / 15) * 15;
-  const key = `${status}|${bucket}|${label}`;
+  const key = `v2|${status}|${bucket}|${label}`;
   const hit = iconCache.get(key);
   if (hit) return hit;
 
   const s = STATUS[status] ?? STATUS.active;
-  const short = label.length > 10 ? `${label.slice(0, 9)}…` : label;
+  const short = label.length > 9 ? `${label.slice(0, 8)}…` : label;
   const icon = L.divIcon({
     html: `
       <div class="sf-map-marker">
-        <div class="sf-map-pin" style="transform:rotate(${bucket}deg)">
-          <svg width="40" height="48" viewBox="0 0 40 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M20 2C11.7 2 5 8.7 5 17c0 11.2 15 29 15 29s15-17.8 15-29C35 8.7 28.3 2 20 2z" fill="${s.fill}" stroke="#fff" stroke-width="2"/>
-            <circle cx="20" cy="17" r="7" fill="#fff"/>
-            <path d="M20 12.5 L23 20 L20 18.2 L17 20Z" fill="${s.fill}"/>
+        <div class="sf-map-arrow" style="transform:rotate(${bucket}deg)">
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="11" cy="11" r="10" fill="${s.fill}" stroke="#fff" stroke-width="2"/>
+            <path d="M11 5.2L15.2 15.2L11 12.6L6.8 15.2Z" fill="#fff"/>
           </svg>
         </div>
         <div class="sf-map-label">${short}</div>
       </div>
     `,
     className: "sf-map-icon",
-    iconSize: [40, 56],
-    iconAnchor: [20, 48],
-    popupAnchor: [0, -44],
+    iconSize: [54, 36],
+    iconAnchor: [27, 11],
+    popupAnchor: [0, -14],
   });
   iconCache.set(key, icon);
   if (iconCache.size > 200) {
@@ -243,25 +242,26 @@ export function VehicleMap({
             >
               <Popup className="sf-map-popup" autoPan={false}>
                 <div className="sf-popup-body">
-                  <p className="sf-popup-title">{vehicle.label}</p>
-                  <div className="sf-popup-row">
+                  <div className="sf-popup-head">
+                    <p className="sf-popup-title">{vehicle.label}</p>
                     <span
-                      className="sf-popup-dot"
+                      className="sf-popup-status"
                       style={{ background: STATUS[status].fill }}
-                    />
-                    {STATUS[status].label}
+                    >
+                      {STATUS[status].label}
+                    </span>
                   </div>
-                  <p>
-                    Speed: <strong>{Math.round(vehicle.speed ?? 0)}</strong>{" "}
-                    km/h
-                  </p>
-                  <p className="sf-popup-coords">
-                    {vehicle.latitude.toFixed(5)},{" "}
-                    {vehicle.longitude.toFixed(5)}
+                  <p className="sf-popup-meta">
+                    <strong>{Math.round(vehicle.speed ?? 0)}</strong> km/h
+                    <span className="sf-popup-sep">·</span>
+                    <span className="sf-popup-coords">
+                      {vehicle.latitude.toFixed(4)},{" "}
+                      {vehicle.longitude.toFixed(4)}
+                    </span>
                   </p>
                 </div>
               </Popup>
-              <Tooltip direction="top" offset={[0, -42]} opacity={0.95}>
+              <Tooltip direction="top" offset={[0, -12]} opacity={0.95}>
                 {vehicle.label} · {Math.round(vehicle.speed ?? 0)} km/h
               </Tooltip>
             </Marker>
