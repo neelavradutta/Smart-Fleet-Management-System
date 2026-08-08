@@ -200,7 +200,7 @@ export function FleetSidePanel({
                         layout
                         whileHover={{ scale: 1.012 }}
                         whileTap={{ scale: 0.985 }}
-                        onClick={() => onFocus(selected ? null : v.id)}
+                        onClick={() => onFocus(v.id)}
                         className={cn(
                           "group relative w-full overflow-hidden rounded-xl px-3 py-3 text-left border transition-colors",
                           selected
@@ -285,20 +285,6 @@ export function FleetSidePanel({
                                 </span>
                               </span>
                             </div>
-
-                            <AnimatePresence>
-                              {selected ? (
-                                <motion.p
-                                  initial={{ opacity: 0, height: 0 }}
-                                  animate={{ opacity: 1, height: "auto" }}
-                                  exit={{ opacity: 0, height: 0 }}
-                                  className="mt-2 text-[11px] font-medium text-slate-700 overflow-hidden"
-                                >
-                                  {v.latitude.toFixed(4)},{" "}
-                                  {v.longitude.toFixed(4)} · tap again to clear
-                                </motion.p>
-                              ) : null}
-                            </AnimatePresence>
                           </div>
                         </div>
                       </motion.button>
