@@ -6,7 +6,6 @@ import { useWebSocket } from "@/hooks/useWebSocket";
 import { VehicleMapDynamic } from "@/components/dashboard/VehicleMapDynamic";
 import { FleetSidePanel } from "@/components/dashboard/FleetSidePanel";
 import { Card } from "@/components/common/Card";
-import { Badge } from "@/components/common/Badge";
 import { PageHero } from "@/components/common/PageHero";
 import { DELIVERY_HUBS, etaMinutesFrom, haversineKm } from "@/lib/geo";
 
@@ -104,18 +103,14 @@ export default function MapPage() {
   return (
     <div className="space-y-6">
       <PageHero
-        theme="mint"
+        theme="teal"
         title="Live map"
         subtitle="Full-tile street map with live vehicle tracks"
-      >
-        <Badge tone={connected ? "success" : "warning"} pulse={connected}>
-          {connected ? "● Live" : "● Reconnecting"}
-        </Badge>
-      </PageHero>
+      />
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
         <Card
-          accent="mint"
+          accent="teal"
           className="xl:col-span-9 p-0 overflow-hidden h-[560px] sm:h-[640px]"
         >
           <VehicleMapDynamic vehicles={mapVehicles} focusId={focusId} />

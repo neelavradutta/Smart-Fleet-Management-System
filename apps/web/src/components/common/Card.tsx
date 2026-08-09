@@ -12,6 +12,7 @@ type Accent =
   | "lilac"
   | "fuchsia"
   | "lime"
+  | "teal"
   | "orange"
   | "none";
 
@@ -59,6 +60,11 @@ const accentStyles: Record<
     border: "border-lime-200",
     bar: "bg-lime-500",
     blob: "bg-lime-300",
+  },
+  teal: {
+    border: "border-[#a7e8d1] hover:shadow-soft",
+    bar: "bg-[#1CB07E]",
+    blob: "bg-[#1CB07E]/30",
   },
   orange: {
     border: "border-orange-200",

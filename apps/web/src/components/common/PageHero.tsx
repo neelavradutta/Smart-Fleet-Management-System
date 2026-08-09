@@ -40,6 +40,12 @@ const themes = {
     chip: "bg-lime-200 text-lime-900 border-lime-300",
     blob: "bg-lime-300/50",
   },
+  teal: {
+    wrap: "bg-[#e8f8f2] border-[#a7e8d1]",
+    title: "text-[#0d6e52]",
+    chip: "bg-[#ccf7e8] text-[#0d6e52] border-[#a7e8d1]",
+    blob: "bg-[#1CB07E]/35",
+  },
   orange: {
     wrap: "bg-orange-100 border-orange-200",
     title: "text-orange-800",
