@@ -3,8 +3,15 @@
 import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { pageVariants } from "@/lib/motion";
+import { cn } from "@/utils/cn";
 
-export function PageTransition({ children }: { children: React.ReactNode }) {
+export function PageTransition({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
   const pathname = usePathname();
   return (
     <motion.div
@@ -13,7 +20,7 @@ export function PageTransition({ children }: { children: React.ReactNode }) {
       initial="initial"
       animate="animate"
       exit="exit"
-      className="min-w-0"
+      className={cn("min-w-0", className)}
     >
       {children}
     </motion.div>

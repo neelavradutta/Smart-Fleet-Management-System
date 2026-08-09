@@ -202,8 +202,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     </>
   );
 
+  const isMapPage = pathname === "/dashboard/map";
+
   return (
-    <div className="sf-shell lg:grid lg:grid-cols-[280px_1fr]">
+    <div
+      className={cn(
+        "sf-shell lg:grid lg:grid-cols-[280px_1fr]",
+        isMapPage && "h-dvh max-h-dvh overflow-hidden",
+      )}
+    >
       <Toaster position="top-right" />
       <div
         className={cn(
@@ -266,8 +273,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         ) : null}
       </AnimatePresence>
 
-      <main className="min-w-0 p-4 sm:p-6 lg:p-8 pt-5">
-        <PageTransition>{children}</PageTransition>
+      <main
+        className={cn(
+          "min-w-0 p-4 sm:p-6 lg:p-8 pt-5",
+          isMapPage &&
+            "flex min-h-0 flex-col overflow-hidden h-[calc(100dvh-3.5rem)] lg:h-full lg:max-h-full",
+        )}
+      >
+        <PageTransition
+          className={isMapPage ? "flex min-h-0 flex-1 flex-col" : undefined}
+        >
+          {children}
+        </PageTransition>
       </main>
     </div>
   );

@@ -81,7 +81,7 @@ export function FleetSidePanel({
   ];
 
   return (
-    <div className="flex h-full min-h-[280px] flex-col rounded-2xl border-2 border-slate-900/10 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.08)] overflow-hidden">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border-2 border-slate-900/10 bg-white shadow-[0_12px_40px_rgba(15,23,42,0.08)]">
       <div className="px-4 pt-4 pb-3 border-b border-slate-200 bg-white">
         <div className="flex items-center justify-between gap-2">
           <div>
@@ -164,7 +164,7 @@ export function FleetSidePanel({
         </LayoutGroup>
       </div>
 
-      <div className="flex-1 overflow-y-auto sf-hide-scrollbar px-2 py-2 max-h-[520px] bg-slate-50/80">
+      <div className="flex-1 overflow-y-auto sf-hide-scrollbar px-2 py-2 min-h-0 bg-slate-50/80">
         <AnimatePresence mode="popLayout" initial={false}>
           {rows.length === 0 ? (
             <motion.p
