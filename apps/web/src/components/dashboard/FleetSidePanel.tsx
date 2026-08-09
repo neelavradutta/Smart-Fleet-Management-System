@@ -208,18 +208,6 @@ export function FleetSidePanel({
                             : "bg-white border-slate-200 hover:border-slate-400",
                         )}
                       >
-                        {selected ? (
-                          <motion.span
-                            layoutId="fleet-active-bar"
-                            className="absolute left-0 top-2 bottom-2 w-1 rounded-full bg-black"
-                            transition={{
-                              type: "spring",
-                              stiffness: 400,
-                              damping: 28,
-                            }}
-                          />
-                        ) : null}
-
                         <div className="flex items-start gap-3">
                           <div className="relative mt-1 shrink-0">
                             {status === "active" ? (
