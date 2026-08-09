@@ -160,20 +160,91 @@
   filter: none;
 }
 
-.sf-leaflet .leaflet-control-zoom a {
-  color: #0f172a !important;
-  border-color: #cbd5e1 !important;
-  width: 34px !important;
-  height: 34px !important;
-  line-height: 34px !important;
-  font-size: 16px !important;
+.sf-map-zoom {
+  margin: 0 12px 18px 0 !important;
 }
 
-.sf-leaflet .leaflet-control-zoom {
-  border: none !important;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12) !important;
-  border-radius: 12px !important;
-  overflow: hidden;
+.sf-map-zoom-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 44px;
+  padding: 4px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 12px 32px rgba(14, 165, 233, 0.18),
+    0 2px 8px rgba(15, 23, 42, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.sf-map-zoom-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 11px;
+  background: transparent;
+  color: #0f172a;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    color 0.2s ease;
+}
+
+.sf-map-zoom-btn:hover {
+  background: rgba(14, 165, 233, 0.12);
+  color: #0284c7;
+  box-shadow: 0 0 0 1px rgba(14, 165, 233, 0.25);
+}
+
+.sf-map-zoom-btn:focus-visible {
+  outline: 2px solid #0ea5e9;
+  outline-offset: 2px;
+}
+
+.sf-map-zoom-readout {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 34px;
+  margin: 2px 0;
+  border-top: 1px solid rgba(148, 163, 184, 0.35);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+  background: linear-gradient(
+    180deg,
+    rgba(14, 165, 233, 0.06) 0%,
+    rgba(255, 255, 255, 0.2) 100%
+  );
+}
+
+.sf-map-zoom-label {
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #64748b;
+  line-height: 1;
+}
+
+.sf-map-zoom-level {
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  color: #0284c7;
+  line-height: 1;
 }
 
 .sf-map-tools {
