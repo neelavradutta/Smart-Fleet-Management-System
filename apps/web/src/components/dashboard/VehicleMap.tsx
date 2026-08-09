@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Minus, Plus } from "lucide-react";
 import {
   MapContainer,
@@ -189,21 +189,11 @@ function MapLifecycle({
 }
 
 function MapZoomButtons({ map }: { map: L.Map }) {
-  const [zoom, setZoom] = useState(map.getZoom());
-
-  useEffect(() => {
-    const sync = () => setZoom(map.getZoom());
-    map.on("zoomend", sync);
-    return () => {
-      map.off("zoomend", sync);
-    };
-  }, [map]);
-
   return (
     <div className="sf-map-zoom-stack">
       <motion.button
         type="button"
-        className="sf-map-zoom-btn"
+        className="sf-map-zoom-btn sf-map-zoom-btn--in"
         aria-label="Zoom in"
         whileHover={{ scale: 1.06 }}
         whileTap={{ scale: 0.92 }}
@@ -212,25 +202,9 @@ function MapZoomButtons({ map }: { map: L.Map }) {
         <Plus size={15} strokeWidth={2.75} />
       </motion.button>
 
-      <div className="sf-map-zoom-readout" aria-live="polite">
-        <span className="sf-map-zoom-label">Z</span>
-        <AnimatePresence mode="popLayout">
-          <motion.span
-            key={zoom}
-            className="sf-map-zoom-level"
-            initial={{ opacity: 0, y: 6, filter: "blur(4px)" }}
-            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-            exit={{ opacity: 0, y: -6, filter: "blur(4px)" }}
-            transition={{ type: "spring", stiffness: 420, damping: 26 }}
-          >
-            {zoom}
-          </motion.span>
-        </AnimatePresence>
-      </div>
-
       <motion.button
         type="button"
-        className="sf-map-zoom-btn"
+        className="sf-map-zoom-btn sf-map-zoom-btn--out"
         aria-label="Zoom out"
         whileHover={{ scale: 1.06 }}
         whileTap={{ scale: 0.92 }}
