@@ -164,7 +164,7 @@ export function FleetSidePanel({
         </LayoutGroup>
       </div>
 
-      <div className="flex-1 overflow-y-auto sf-hide-scrollbar px-2 py-2 min-h-0 bg-slate-50/80">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto sf-hide-scrollbar bg-teal-600 px-2 py-2">
         <AnimatePresence mode="popLayout" initial={false}>
           {rows.length === 0 ? (
             <motion.p
@@ -172,7 +172,7 @@ export function FleetSidePanel({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="py-16 text-center text-sm font-medium text-slate-600"
+              className="m-auto text-center text-sm font-medium text-teal-100"
             >
               No matches
             </motion.p>
