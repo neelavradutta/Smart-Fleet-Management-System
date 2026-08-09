@@ -101,7 +101,7 @@ export default function MapPage() {
   );
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden [&>*]:!mb-0">
+    <div className="flex min-h-0 flex-1 flex-col gap-3 [&>*]:!mb-0">
       <PageHero
         theme="teal"
         title="Live map"
@@ -111,7 +111,7 @@ export default function MapPage() {
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 max-xl:grid-rows-[minmax(0,1.15fr)_minmax(0,0.85fr)] xl:grid-cols-12 xl:grid-rows-[minmax(0,1fr)]">
         <Card
           accent="teal"
-          className="min-h-0 h-full overflow-hidden p-0 xl:col-span-9"
+          className="min-h-0 h-full overflow-hidden p-0 shadow-none xl:col-span-9"
         >
           <VehicleMapDynamic vehicles={mapVehicles} focusId={focusId} />
         </Card>
