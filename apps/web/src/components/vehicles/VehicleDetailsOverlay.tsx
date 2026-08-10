@@ -1061,7 +1061,7 @@ export function VehicleDetailsOverlay({
                 className="flex flex-wrap gap-3 pb-2 pt-1"
               >
                 <Link
-                  href="/dashboard/map"
+                  href={`/dashboard/map?focus=${encodeURIComponent(vehicleView.id)}&t=${Date.now()}`}
                   className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-sky-700 transition-colors"
                   onClick={onClose}
                 >

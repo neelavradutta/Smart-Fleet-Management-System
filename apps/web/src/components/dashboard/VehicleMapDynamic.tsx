@@ -18,13 +18,19 @@ const VehicleMap = dynamic(
 export function VehicleMapDynamic({
   vehicles,
   focusId = null,
+  focusToken = null,
 }: {
   vehicles: MapVehicle[];
   focusId?: string | null;
+  focusToken?: string | null;
 }) {
   return (
     <div className="sf-map-shell">
-      <VehicleMap vehicles={vehicles} focusId={focusId} />
+      <VehicleMap
+        vehicles={vehicles}
+        focusId={focusId}
+        focusToken={focusToken}
+      />
     </div>
   );
 }

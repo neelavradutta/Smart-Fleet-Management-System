@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { api } from "@/lib/api";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import { VehicleMapDynamic } from "@/components/dashboard/VehicleMapDynamic";
@@ -37,10 +38,13 @@ function mapStatus(status: string): "active" | "idle" | "offline" {
   return "offline";
 }
 
-export default function MapPage() {
+function MapPageInner() {
+  const searchParams = useSearchParams();
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [live, setLive] = useState<Record<string, LocUpdate>>({});
-  const [focusId, setFocusId] = useState<string | null>(null);
+  const [focusId, setFocusId] = useState<string | null>(() =>
+    searchParams.get("focus"),
+  );
   const { data, connected } = useWebSocket<LocUpdate>("location_update");
 
   useEffect(() => {
@@ -48,6 +52,11 @@ export default function MapPage() {
       .then((res) => setVehicles(res.data))
       .catch(console.error);
   }, []);
+
+  useEffect(() => {
+    const focus = searchParams.get("focus");
+    if (focus) setFocusId(focus);
+  }, [searchParams]);
 
   useEffect(() => {
     if (!data?.vehicleId) return;
@@ -113,7 +122,11 @@ export default function MapPage() {
           accent="teal"
           className="min-h-0 h-full overflow-hidden p-0 shadow-none xl:col-span-9"
         >
-          <VehicleMapDynamic vehicles={mapVehicles} focusId={focusId} />
+          <VehicleMapDynamic
+            vehicles={mapVehicles}
+            focusId={focusId}
+            focusToken={searchParams.get("t")}
+          />
         </Card>
 
         <div className="min-h-0 h-full xl:col-span-3">
@@ -126,5 +139,24 @@ export default function MapPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function MapPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-0 flex-1 flex-col gap-3">
+          <PageHero
+            theme="teal"
+            title="Live map"
+            subtitle="Full-tile street map with live vehicle tracks"
+          />
+          <p className="text-sm text-slate-500">Loading map…</p>
+        </div>
+      }
+    >
+      <MapPageInner />
+    </Suspense>
   );
 }

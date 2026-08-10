@@ -12,6 +12,7 @@ import {
   Tooltip,
   useMap,
 } from "react-leaflet";
+import type { Marker as LeafletMarker } from "leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { VehicleMapPopup } from "./VehicleMapPopup";
@@ -83,15 +84,22 @@ function getVehicleIcon(
 function MapLifecycle({
   vehicles,
   focusId,
+  focusToken,
 }: {
   vehicles: MapVehicle[];
   focusId?: string | null;
+  focusToken?: string | null;
 }) {
   const map = useMap();
   const fittedKey = useRef<string>("");
   const vehiclesRef = useRef(vehicles);
   const lastFocusRef = useRef<string | null>(null);
   vehiclesRef.current = vehicles;
+
+  useEffect(() => {
+    // New deep-link token → allow fly again for same vehicle id
+    lastFocusRef.current = null;
+  }, [focusToken]);
 
   useEffect(() => {
     const el = map.getContainer();
@@ -128,36 +136,42 @@ function MapLifecycle({
     };
   }, [map]);
 
-  // Fit once per vehicle set — never on GPS position ticks
+  // Fit fleet once — skip when deep-link / panel focus targets one unit
   useEffect(() => {
     const idsKey = vehicles
       .map((v) => v.id)
       .sort()
       .join("|");
     if (!vehicles.length || fittedKey.current === idsKey) return;
+    if (focusId) {
+      // Still mark fitted so clearing focus later does not sudden-fit mid-session
+      fittedKey.current = idsKey;
+      return;
+    }
     const bounds = L.latLngBounds(
       vehicles.map((v) => [v.latitude, v.longitude] as [number, number]),
     );
     map.invalidateSize({ animate: false });
     map.fitBounds(bounds.pad(0.28), { animate: false, maxZoom: 15 });
     fittedKey.current = idsKey;
-  }, [vehicles, map]);
+  }, [vehicles, map, focusId]);
 
-  // Fly only when selection changes — not every live GPS update
+  // Same behaviour as fleet list click: pan + zoom onto that vehicle
   useEffect(() => {
     if (!focusId) {
       lastFocusRef.current = null;
       return;
     }
-    if (lastFocusRef.current === focusId) return;
-    lastFocusRef.current = focusId;
     const v = vehiclesRef.current.find((x) => x.id === focusId);
     if (!v) return;
-    map.flyTo([v.latitude, v.longitude], Math.max(map.getZoom(), 14), {
+    if (lastFocusRef.current === focusId) return;
+    lastFocusRef.current = focusId;
+    map.invalidateSize({ animate: false });
+    map.flyTo([v.latitude, v.longitude], 16, {
       duration: 0.55,
       easeLinearity: 0.25,
     });
-  }, [focusId, map]);
+  }, [focusId, map, vehicles]);
 
   useEffect(() => {
     const ctrl = new L.Control({ position: "topright" });
@@ -339,12 +353,58 @@ function FitPopupInBounds() {
   return null;
 }
 
+function VehicleMarker({
+  vehicle,
+  status,
+  focused,
+}: {
+  vehicle: MapVehicle;
+  status: "active" | "idle" | "offline";
+  focused: boolean;
+}) {
+  const markerRef = useRef<LeafletMarker | null>(null);
+
+  useEffect(() => {
+    if (!focused) return;
+    const marker = markerRef.current;
+    if (!marker) return;
+    const t = window.setTimeout(() => {
+      marker.openPopup();
+    }, 400);
+    return () => window.clearTimeout(t);
+  }, [focused]);
+
+  return (
+    <Marker
+      ref={markerRef}
+      position={[vehicle.latitude, vehicle.longitude]}
+      icon={getVehicleIcon(vehicle.label, status, vehicle.heading ?? 0)}
+      zIndexOffset={focused ? 1000 : status === "active" ? 400 : 200}
+    >
+      <Popup
+        className="sf-map-popup"
+        autoPan={false}
+        maxWidth={280}
+        closeButton={false}
+      >
+        <VehicleMapPopup vehicle={vehicle} />
+      </Popup>
+      <Tooltip direction="top" offset={[0, -12]} opacity={0.95}>
+        {vehicle.label} · {Math.round(vehicle.speed ?? 0)} km/h ·{" "}
+        {(vehicle.distanceKm ?? 0).toFixed(1)} km left
+      </Tooltip>
+    </Marker>
+  );
+}
+
 export function VehicleMap({
   vehicles,
   focusId = null,
+  focusToken = null,
 }: {
   vehicles: MapVehicle[];
   focusId?: string | null;
+  focusToken?: string | null;
 }) {
   // Freeze initial center — never rebind to moving GPS (causes camera shake)
   const initialCenter = useRef<[number, number] | null>(null);
@@ -381,41 +441,23 @@ export function VehicleMap({
         />
 
         <MapZoomControl />
-        <MapLifecycle vehicles={vehicles} focusId={focusId} />
+        <MapLifecycle
+          vehicles={vehicles}
+          focusId={focusId}
+          focusToken={focusToken}
+        />
         <FitPopupInBounds />
 
         {vehicles.map((vehicle) => {
           const status = vehicle.status ?? "active";
+          const focused = focusId === vehicle.id;
           return (
-            <Marker
+            <VehicleMarker
               key={vehicle.id}
-              position={[vehicle.latitude, vehicle.longitude]}
-              icon={getVehicleIcon(
-                vehicle.label,
-                status,
-                vehicle.heading ?? 0,
-              )}
-              zIndexOffset={
-                focusId === vehicle.id
-                  ? 1000
-                  : status === "active"
-                    ? 400
-                    : 200
-              }
-            >
-              <Popup
-                className="sf-map-popup"
-                autoPan={false}
-                maxWidth={280}
-                closeButton={false}
-              >
-                <VehicleMapPopup vehicle={vehicle} />
-              </Popup>
-              <Tooltip direction="top" offset={[0, -12]} opacity={0.95}>
-                {vehicle.label} · {Math.round(vehicle.speed ?? 0)} km/h ·{" "}
-                {(vehicle.distanceKm ?? 0).toFixed(1)} km left
-              </Tooltip>
-            </Marker>
+              vehicle={vehicle}
+              status={status}
+              focused={focused}
+            />
           );
         })}
       </MapContainer>
