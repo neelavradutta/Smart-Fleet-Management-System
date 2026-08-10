@@ -9,14 +9,17 @@ import {
   type VehicleCardModel,
 } from "@/components/vehicles/VehicleCard";
 import { VehicleDetailsOverlay } from "@/components/vehicles/VehicleDetailsOverlay";
+import { NewVehicleFormOverlay } from "@/components/vehicles/NewVehicleFormOverlay";
 import { Button } from "@/components/common/Button";
 import { PageHero } from "@/components/common/PageHero";
+import { Plus } from "lucide-react";
 
 function VehiclesPageInner() {
   const [rows, setRows] = useState<VehicleCardModel[]>([]);
   const [status, setStatus] = useState("all");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<VehicleCardModel | null>(null);
+  const [newOpen, setNewOpen] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -86,6 +89,15 @@ function VehiclesPageInner() {
             {s === "all" ? "All" : s}
           </Button>
         ))}
+        <Button
+          size="sm"
+          variant="success"
+          className="ml-auto gap-1.5"
+          onClick={() => setNewOpen(true)}
+        >
+          <Plus size={14} />
+          New fleet
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -111,6 +123,14 @@ function VehiclesPageInner() {
         open={Boolean(selected)}
         vehicle={selected}
         onClose={closeOverlay}
+      />
+      <NewVehicleFormOverlay
+        open={newOpen}
+        onClose={() => setNewOpen(false)}
+        onCreated={(v) => {
+          setRows((prev) => [v, ...prev]);
+          setSelected(v);
+        }}
       />
     </div>
   );

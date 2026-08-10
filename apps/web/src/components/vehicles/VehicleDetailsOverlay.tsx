@@ -657,7 +657,8 @@ export function VehicleDetailsOverlay({
                       ? `${Number(vehicleView.currentLatitude).toFixed(4)}, ${Number(vehicleView.currentLongitude).toFixed(4)}`
                       : "No GPS fix"}
                     <span className="opacity-70">
-                      · GPS {relativeTime(vehicleView.lastLocationUpdate)}
+                      · Last recorded{" "}
+                      {relativeTime(vehicleView.lastLocationUpdate)}
                     </span>
                   </p>
                 </motion.div>
@@ -988,13 +989,6 @@ export function VehicleDetailsOverlay({
                   <MapPin size={15} />
                   Open live map
                 </Link>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
-                >
-                  Close
-                </button>
               </motion.div>
             </div>
           </motion.div>

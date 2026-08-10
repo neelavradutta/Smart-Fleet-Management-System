@@ -549,6 +549,52 @@ app.get("/api/v1/analytics/live", (_req, res) => {
 });
 
 app.get("/api/v1/vehicles", (_req, res) => res.json({ data: vehicles }));
+app.post("/api/v1/vehicles", (req, res) => {
+  const b = req.body ?? {};
+  const row = {
+    id: randomUUID(),
+    vehicleNumber: b.vehicleNumber ?? `NEW-${vehicles.length + 1}`,
+    licensePlate: b.licensePlate ?? null,
+    vehicleType: b.vehicleType ?? "TRUCK",
+    make: b.make ?? null,
+    model: b.model ?? null,
+    variant: b.variant ?? null,
+    year: b.year ?? null,
+    color: b.color ?? null,
+    fuelType: b.fuelType ?? null,
+    transmission: b.transmission ?? null,
+    engineNumber: b.engineNumber ?? null,
+    chassisNumber: b.chassisNumber ?? null,
+    vin: b.vin ?? b.chassisNumber ?? null,
+    capacityWeightKg: b.capacityWeightKg ?? null,
+    capacityVolumeM3: b.capacityVolumeM3 ?? null,
+    status: b.status ?? "ACTIVE",
+    currentDriverName: b.currentDriverName ?? null,
+    checkInAt: b.checkInAt ?? null,
+    checkOutAt: b.checkOutAt ?? null,
+    driverHistory: Array.isArray(b.driverHistory) ? b.driverHistory : [],
+    currentLatitude: String(b.currentLatitude ?? "19.076090"),
+    currentLongitude: String(b.currentLongitude ?? "72.877426"),
+    lastLocationUpdate: b.lastLocationUpdate ?? new Date().toISOString(),
+    registrationDate: b.registrationDate ?? null,
+    registrationExpiry: b.registrationExpiry ?? null,
+    registrationAuthority: b.registrationAuthority ?? null,
+    registrationStatus: b.registrationStatus ?? "ACTIVE",
+    insuranceProvider: b.insuranceProvider ?? null,
+    policyNumber: b.policyNumber ?? null,
+    insuranceStartDate: b.insuranceStartDate ?? null,
+    insuranceExpiryDate: b.insuranceExpiryDate ?? null,
+    insuranceStatus: b.insuranceStatus ?? "ACTIVE",
+    pucCertificateNumber: b.pucCertificateNumber ?? null,
+    pucIssueDate: b.pucIssueDate ?? null,
+    pucExpiryDate: b.pucExpiryDate ?? null,
+    fitnessCertificate: b.fitnessCertificate ?? null,
+    permitStatus: b.permitStatus ?? null,
+    permitExpiry: b.permitExpiry ?? null,
+  };
+  vehicles.unshift(row);
+  res.status(201).json({ data: row });
+});
 app.get("/api/v1/drivers", (_req, res) => res.json({ data: drivers }));
 app.get("/api/v1/alerts", (_req, res) => res.json({ data: alerts }));
 app.get("/api/v1/geofences", (_req, res) => res.json({ data: geofences }));
