@@ -1,17 +1,156 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
 import { createPortal } from "react-dom";
-import { DayPicker } from "react-day-picker";
+import { DayPicker, type DropdownProps } from "react-day-picker";
 import { format, isValid, parse } from "date-fns";
-import { Calendar } from "lucide-react";
+import { Calendar, ChevronDown } from "lucide-react";
 import { cn } from "@/utils/cn";
 import "react-day-picker/style.css";
+
+const OPEN_EVENT = "sf-datepicker-open";
+const DROPDOWN_EVENT = "sf-datepicker-dropdown-open";
+let pickerSeq = 0;
+let dropdownSeq = 0;
 
 function parseValue(value: string): Date | undefined {
   if (!value) return undefined;
   const d = parse(value, "yyyy-MM-dd", new Date());
   return isValid(d) ? d : undefined;
+}
+
+/** Custom month/year menu — replaces native <select> look. */
+function PolishedDropdown({
+  options,
+  value,
+  onChange,
+  disabled,
+  "aria-label": ariaLabel,
+}: DropdownProps) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLUListElement>(null);
+  const idRef = useRef(`dd-${++dropdownSeq}`);
+  const selected = options?.find((o) => o.value === Number(value));
+
+  useEffect(() => {
+    const onOther = (e: Event) => {
+      const id = (e as CustomEvent<string>).detail;
+      if (id !== idRef.current) setOpen(false);
+    };
+    window.addEventListener(DROPDOWN_EVENT, onOther);
+    return () => window.removeEventListener(DROPDOWN_EVENT, onOther);
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent) => {
+      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey, true);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey, true);
+    };
+  }, [open]);
+
+  useLayoutEffect(() => {
+    if (!open || !listRef.current) return;
+    const active = listRef.current.querySelector<HTMLElement>(
+      '[data-selected="true"]',
+    );
+    active?.scrollIntoView({ block: "center" });
+  }, [open]);
+
+  const openMenu = () => {
+    window.dispatchEvent(
+      new CustomEvent(DROPDOWN_EVENT, { detail: idRef.current }),
+    );
+    setOpen(true);
+  };
+
+  const pick = (next: number) => {
+    if (!onChange) return;
+    const event = {
+      target: { value: String(next) },
+    } as ChangeEvent<HTMLSelectElement>;
+    onChange(event);
+    setOpen(false);
+  };
+
+  return (
+    <div ref={rootRef} className="relative inline-flex">
+      <button
+        type="button"
+        disabled={disabled}
+        aria-label={ariaLabel}
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        onClick={() => {
+          if (open) setOpen(false);
+          else openMenu();
+        }}
+        className={cn(
+          "inline-flex h-7 items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 text-[12px] font-semibold text-slate-800",
+          "hover:border-sky-300 hover:bg-sky-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-sky-300",
+          open && "border-sky-400 bg-sky-50 ring-2 ring-sky-200",
+          disabled && "opacity-50",
+        )}
+      >
+        <span className="max-w-[5.25rem] truncate">{selected?.label ?? "—"}</span>
+        <ChevronDown
+          size={12}
+          className={cn(
+            "shrink-0 text-slate-500 transition-transform",
+            open && "rotate-180",
+          )}
+        />
+      </button>
+
+      {open ? (
+        <ul
+          ref={listRef}
+          role="listbox"
+          aria-label={ariaLabel}
+          className="absolute left-0 top-[calc(100%+4px)] z-20 max-h-36 min-w-full overflow-y-auto rounded-xl border border-slate-200 bg-white py-1 shadow-[0_12px_32px_-12px_rgba(15,23,42,0.35)] sf-hide-scrollbar"
+        >
+          {(options ?? []).map((opt) => (
+            <li key={opt.value} role="presentation">
+              <button
+                type="button"
+                role="option"
+                disabled={opt.disabled}
+                aria-selected={opt.value === Number(value)}
+                data-selected={opt.value === Number(value) ? "true" : "false"}
+                onClick={() => pick(opt.value)}
+                className={cn(
+                  "flex w-full items-center px-2.5 py-1 text-left text-[11px] font-medium text-slate-700",
+                  "hover:bg-sky-50 hover:text-sky-800 disabled:opacity-40",
+                  opt.value === Number(value) &&
+                    "bg-sky-500 font-semibold text-white hover:bg-sky-500 hover:text-white",
+                )}
+              >
+                {opt.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
+  );
 }
 
 export function DatePickerField({
@@ -27,42 +166,28 @@ export function DatePickerField({
 }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [pos, setPos] = useState({ top: 0, left: 0, width: 0 });
   const triggerRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
+  const idRef = useRef(`dp-${++pickerSeq}`);
   const selected = parseValue(value);
 
   useEffect(() => setMounted(true), []);
 
-  const updatePos = () => {
-    const el = triggerRef.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    const popW = Math.max(r.width, 320);
-    const left = Math.min(
-      Math.max(8, r.left),
-      window.innerWidth - popW - 8,
-    );
-    const below = r.bottom + 8;
-    const estimatedH = 360;
-    const top =
-      below + estimatedH > window.innerHeight - 8
-        ? Math.max(8, r.top - estimatedH - 8)
-        : below;
-    setPos({ top, left, width: popW });
-  };
-
-  useLayoutEffect(() => {
-    if (!open) return;
-    updatePos();
-    const onScroll = () => updatePos();
-    window.addEventListener("resize", onScroll);
-    window.addEventListener("scroll", onScroll, true);
-    return () => {
-      window.removeEventListener("resize", onScroll);
-      window.removeEventListener("scroll", onScroll, true);
+  useEffect(() => {
+    const onOtherOpen = (e: Event) => {
+      const id = (e as CustomEvent<string>).detail;
+      if (id !== idRef.current) setOpen(false);
     };
-  }, [open]);
+    window.addEventListener(OPEN_EVENT, onOtherOpen);
+    return () => window.removeEventListener(OPEN_EVENT, onOtherOpen);
+  }, []);
+
+  const openPicker = () => {
+    window.dispatchEvent(
+      new CustomEvent(OPEN_EVENT, { detail: idRef.current }),
+    );
+    setOpen(true);
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -74,12 +199,16 @@ export function DatePickerField({
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
+      e.preventDefault();
       e.stopPropagation();
       setOpen(false);
     };
-    document.addEventListener("mousedown", onPointer);
+    const timer = window.setTimeout(() => {
+      document.addEventListener("mousedown", onPointer);
+    }, 0);
     document.addEventListener("keydown", onKey, true);
     return () => {
+      window.clearTimeout(timer);
       document.removeEventListener("mousedown", onPointer);
       document.removeEventListener("keydown", onKey, true);
     };
@@ -95,7 +224,13 @@ export function DatePickerField({
         data-date-picker-open={open ? "true" : "false"}
         aria-haspopup="dialog"
         aria-expanded={open}
-        onClick={() => setOpen((v) => !v)}
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (open) setOpen(false);
+          else openPicker();
+        }}
         className={cn(
           className,
           "flex items-center justify-between gap-2 text-left",
@@ -108,47 +243,36 @@ export function DatePickerField({
 
       {mounted && open
         ? createPortal(
-            <div
-              ref={popoverRef}
-              role="dialog"
-              aria-label="Choose date"
-              className="fixed z-[120] rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_20px_50px_-20px_rgba(15,23,42,0.45)]"
-              style={{ top: pos.top, left: pos.left, width: pos.width }}
-            >
-              <DayPicker
-                mode="single"
-                selected={selected}
-                defaultMonth={selected ?? new Date()}
-                captionLayout="dropdown"
-                startMonth={new Date(1990, 0)}
-                endMonth={new Date(2045, 11)}
-                onSelect={(day) => {
-                  onChange(day ? format(day, "yyyy-MM-dd") : "");
-                  setOpen(false);
-                }}
-                className="rdp-root mx-auto [--rdp-accent-color:#0ea5e9] [--rdp-accent-background-color:#e0f2fe] [--rdp-day-height:36px] [--rdp-day-width:36px] [--rdp-day_button-height:34px] [--rdp-day_button-width:34px]"
+            <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+              <button
+                type="button"
+                aria-label="Dismiss calendar"
+                className="absolute inset-0 bg-slate-900/25"
+                onClick={() => setOpen(false)}
               />
-              <div className="mt-2 flex items-center justify-between gap-2 border-t border-slate-100 pt-2">
-                <button
-                  type="button"
-                  className="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50"
-                  onClick={() => {
-                    onChange("");
+              <div
+                ref={popoverRef}
+                role="dialog"
+                aria-label="Choose date"
+                data-date-picker-open="true"
+                className="sf-date-picker relative z-10 w-[300px] rounded-2xl border border-slate-200/90 bg-white p-3 shadow-[0_24px_60px_-20px_rgba(15,23,42,0.45)]"
+                onMouseDown={(e) => e.stopPropagation()}
+              >
+                <DayPicker
+                  mode="single"
+                  selected={selected}
+                  defaultMonth={selected ?? new Date()}
+                  captionLayout="dropdown"
+                  navLayout="after"
+                  startMonth={new Date(1990, 0)}
+                  endMonth={new Date(2045, 11)}
+                  onSelect={(day) => {
+                    onChange(day ? format(day, "yyyy-MM-dd") : "");
                     setOpen(false);
                   }}
-                >
-                  Clear
-                </button>
-                <button
-                  type="button"
-                  className="rounded-lg px-2.5 py-1.5 text-xs font-semibold text-sky-700 hover:bg-sky-50"
-                  onClick={() => {
-                    onChange(format(new Date(), "yyyy-MM-dd"));
-                    setOpen(false);
-                  }}
-                >
-                  Today
-                </button>
+                  components={{ Dropdown: PolishedDropdown }}
+                  className="rdp-root mx-auto"
+                />
               </div>
             </div>,
             document.body,

@@ -6,6 +6,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { X } from "lucide-react";
 import { api } from "@/lib/api";
 import { Button } from "@/components/common/Button";
+import { DatePickerField } from "@/components/common/DatePickerField";
 import type { VehicleCardModel } from "@/components/vehicles/VehicleCard";
 
 const emptyForm = {
@@ -48,12 +49,12 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <label className="block space-y-1 min-w-0">
+    <div className="block space-y-1 min-w-0">
       <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
         {label}
       </span>
       {children}
-    </label>
+    </div>
   );
 }
 
@@ -97,7 +98,11 @@ export function NewVehicleFormOverlay({
     if (!open) return;
     setForm(emptyForm);
     setError(null);
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (document.querySelector('[data-date-picker-open="true"]')) return;
+      onClose();
+    };
     window.addEventListener("keydown", onKey);
     document.body.style.overflow = "hidden";
     return () => {
@@ -114,6 +119,10 @@ export function NewVehicleFormOverlay({
       >,
     ) =>
       setForm((prev) => ({ ...prev, [key]: e.target.value }));
+
+  const setDate =
+    (key: keyof FormState) => (next: string) =>
+      setForm((prev) => ({ ...prev, [key]: next }));
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -208,12 +217,9 @@ export function NewVehicleFormOverlay({
           >
             <div className="flex items-start justify-between gap-4 bg-sky-600 px-5 sm:px-7 pt-5 pb-5">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-white/80">
-                  Add unit
-                </p>
                 <h2
                   id="new-fleet-title"
-                  className="mt-1 font-display text-2xl font-semibold text-white"
+                  className="font-display text-2xl font-semibold text-white"
                 >
                   New fleet vehicle
                 </h2>
@@ -345,19 +351,17 @@ export function NewVehicleFormOverlay({
 
               <Section title="Registration details">
                 <Field label="Registration date">
-                  <input
-                    type="date"
+                  <DatePickerField
                     className={fieldClass}
                     value={form.registrationDate}
-                    onChange={set("registrationDate")}
+                    onChange={setDate("registrationDate")}
                   />
                 </Field>
                 <Field label="Registration expiry">
-                  <input
-                    type="date"
+                  <DatePickerField
                     className={fieldClass}
                     value={form.registrationExpiry}
-                    onChange={set("registrationExpiry")}
+                    onChange={setDate("registrationExpiry")}
                   />
                 </Field>
                 <Field label="Registration authority / RTO">
@@ -386,19 +390,17 @@ export function NewVehicleFormOverlay({
                   />
                 </Field>
                 <Field label="Insurance start date">
-                  <input
-                    type="date"
+                  <DatePickerField
                     className={fieldClass}
                     value={form.insuranceStartDate}
-                    onChange={set("insuranceStartDate")}
+                    onChange={setDate("insuranceStartDate")}
                   />
                 </Field>
                 <Field label="Insurance expiry date">
-                  <input
-                    type="date"
+                  <DatePickerField
                     className={fieldClass}
                     value={form.insuranceExpiryDate}
-                    onChange={set("insuranceExpiryDate")}
+                    onChange={setDate("insuranceExpiryDate")}
                   />
                 </Field>
                 <Field label="PUC certificate number">
@@ -409,19 +411,17 @@ export function NewVehicleFormOverlay({
                   />
                 </Field>
                 <Field label="PUC issue date">
-                  <input
-                    type="date"
+                  <DatePickerField
                     className={fieldClass}
                     value={form.pucIssueDate}
-                    onChange={set("pucIssueDate")}
+                    onChange={setDate("pucIssueDate")}
                   />
                 </Field>
                 <Field label="PUC expiry date">
-                  <input
-                    type="date"
+                  <DatePickerField
                     className={fieldClass}
                     value={form.pucExpiryDate}
-                    onChange={set("pucExpiryDate")}
+                    onChange={setDate("pucExpiryDate")}
                   />
                 </Field>
                 <Field label="Fitness certificate">
@@ -433,11 +433,10 @@ export function NewVehicleFormOverlay({
                   />
                 </Field>
                 <Field label="Permit expiry">
-                  <input
-                    type="date"
+                  <DatePickerField
                     className={fieldClass}
                     value={form.permitExpiry}
-                    onChange={set("permitExpiry")}
+                    onChange={setDate("permitExpiry")}
                   />
                 </Field>
               </Section>

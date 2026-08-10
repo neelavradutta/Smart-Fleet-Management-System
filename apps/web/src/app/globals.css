@@ -528,3 +528,127 @@
   text-align: center;
   line-height: 1.2;
 }
+
+/* Polished DayPicker shell (keeps DayPicker, cleans chrome) */
+.sf-date-picker .rdp-root {
+  --rdp-accent-color: #0ea5e9;
+  --rdp-accent-background-color: #e0f2fe;
+  --rdp-day-height: 34px;
+  --rdp-day-width: 34px;
+  --rdp-day_button-height: 32px;
+  --rdp-day_button-width: 32px;
+  --rdp-day_button-border-radius: 9999px;
+  --rdp-selected-border: 2px solid transparent;
+  --rdp-today-color: #0284c7;
+  --rdp-outside-opacity: 0.35;
+  --rdp-nav_button-height: 1.65rem;
+  --rdp-nav_button-width: 1.65rem;
+  --rdp-nav-height: 2.15rem;
+  --rdp-dropdown-gap: 0.35rem;
+  --rdp-weekday-padding: 0.3rem 0;
+  --rdp-weekday-opacity: 0.7;
+  color: #0f172a;
+  font-size: 13px;
+}
+
+.sf-date-picker .rdp-months {
+  max-width: none;
+  width: 100%;
+}
+
+.sf-date-picker .rdp-month {
+  width: 100%;
+}
+
+.sf-date-picker .rdp-month_caption {
+  align-items: center;
+  font-size: 13px;
+  font-weight: 600;
+  height: var(--rdp-nav-height);
+  padding-inline-end: 4rem;
+}
+
+.sf-date-picker .rdp-dropdowns {
+  align-items: center;
+  gap: 0.35rem;
+  height: 100%;
+}
+
+.sf-date-picker .rdp-caption_label {
+  display: none;
+}
+
+.sf-date-picker .rdp-dropdown:focus-visible ~ .rdp-caption_label {
+  outline: none;
+}
+
+.sf-date-picker .rdp-nav {
+  gap: 0.15rem;
+}
+
+.sf-date-picker .rdp-button_previous,
+.sf-date-picker .rdp-button_next {
+  border-radius: 0.5rem;
+  color: #0369a1;
+}
+
+.sf-date-picker .rdp-button_previous:hover,
+.sf-date-picker .rdp-button_next:hover {
+  background: #f0f9ff;
+}
+
+.sf-date-picker .rdp-chevron {
+  fill: #0284c7;
+}
+
+.sf-date-picker .rdp-month_grid {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.sf-date-picker .rdp-weekday {
+  width: 14.285%;
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.sf-date-picker .rdp-day {
+  width: 14.285%;
+  height: var(--rdp-day-height);
+  text-align: center;
+  vertical-align: middle;
+}
+
+.sf-date-picker .rdp-day_button {
+  margin: 0 auto;
+  font-size: 12.5px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.sf-date-picker .rdp-day_button:hover:not(:disabled) {
+  background: #f0f9ff;
+  color: #0369a1;
+}
+
+.sf-date-picker .rdp-today:not(.rdp-outside) .rdp-day_button {
+  font-weight: 700;
+  box-shadow: inset 0 0 0 1.5px #7dd3fc;
+}
+
+.sf-date-picker .rdp-selected .rdp-day_button {
+  background: #0ea5e9 !important;
+  color: #fff !important;
+  font-weight: 700;
+  font-size: 12.5px;
+  border: none;
+  box-shadow: 0 4px 10px -4px rgba(14, 165, 233, 0.7);
+}
+
+.sf-date-picker .rdp-selected.rdp-today .rdp-day_button {
+  box-shadow: 0 4px 10px -4px rgba(14, 165, 233, 0.7);
+}
+
