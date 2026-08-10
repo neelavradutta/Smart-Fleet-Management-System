@@ -18,9 +18,8 @@ export default function VehiclesPage() {
         setRows(
           res.data.map((v, i) => ({
             ...v,
-            healthScore: 78 + ((i * 7) % 20),
+            healthScore: i === 3 ? 28 : 78 + ((i * 7) % 20),
             fuelLevel: 40 + ((i * 13) % 55),
-            maintenanceDue: i % 3 === 0,
           })),
         ),
       )

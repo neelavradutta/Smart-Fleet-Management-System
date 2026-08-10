@@ -25,6 +25,17 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleCardModel }) {
   const fuel = vehicle.fuelLevel ?? 62;
   const status = vehicle.status.toLowerCase();
   const isActive = status === "active";
+  const isMaintenance = status === "maintenance";
+  const accentBar = isActive
+    ? "bg-rose-500"
+    : isMaintenance
+      ? "bg-amber-400"
+      : "bg-slate-400";
+  const accentGlow = isActive
+    ? "bg-rose-300/40"
+    : isMaintenance
+      ? "bg-amber-300/40"
+      : "bg-slate-300/40";
   const driverName =
     isActive && vehicle.currentDriverName?.trim()
       ? vehicle.currentDriverName.trim()
@@ -39,8 +50,10 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleCardModel }) {
         transition={{ type: "spring", stiffness: 360, damping: 22 }}
         className="bg-white border border-sky-200 rounded-2xl p-6 shadow-card hover:shadow-soft relative overflow-hidden group"
       >
-        <span className="absolute top-0 left-0 right-0 h-1 bg-sky-500" />
-        <span className="pointer-events-none absolute -right-6 -top-6 h-28 w-28 rounded-full bg-sky-300/35 blur-2xl" />
+        <span className={`absolute top-0 left-0 right-0 h-1 ${accentBar}`} />
+        <span
+          className={`pointer-events-none absolute -right-6 -top-6 h-28 w-28 rounded-full blur-2xl ${accentGlow}`}
+        />
 
         <div className="relative z-10">
           <div className="flex items-start justify-between mb-4">
@@ -60,16 +73,12 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleCardModel }) {
               dotClassName={
                 isActive
                   ? "bg-red-500"
-                  : status === "maintenance"
+                  : isMaintenance
                     ? "bg-amber-400"
-                    : "bg-black"
+                    : "bg-slate-400"
               }
               tone={
-                isActive
-                  ? "danger"
-                  : status === "maintenance"
-                    ? "warning"
-                    : "neutral"
+                isActive ? "danger" : isMaintenance ? "warning" : "neutral"
               }
             >
               {vehicle.status}
@@ -109,15 +118,15 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleCardModel }) {
                 <p className="text-lg font-semibold text-slate-900">{fuel}%</p>
               </div>
             </div>
-            {vehicle.maintenanceDue ? (
+            {health < 35 ? (
               <motion.div
                 animate={{ scale: [1, 1.04, 1] }}
                 transition={{ repeat: Infinity, duration: 1.6 }}
-                className="flex items-center gap-2 px-3 py-1.5 bg-amber-100 rounded-xl border border-amber-200"
+                className="flex items-center gap-2 px-3 py-1.5 bg-rose-100 rounded-xl border border-rose-200"
               >
-                <AlertCircle size={14} className="text-amber-600" />
-                <span className="text-xs font-medium text-amber-700">
-                  Maintenance
+                <AlertCircle size={14} className="text-rose-600" />
+                <span className="text-xs font-medium text-rose-700">
+                  Service Required
                 </span>
               </motion.div>
             ) : null}

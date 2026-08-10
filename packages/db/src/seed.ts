@@ -88,6 +88,30 @@ async function main() {
         currentLatitude: "19.218330",
         currentLongitude: "72.978090",
       },
+      {
+        fleetId: fleet.id,
+        vehicleNumber: "BIKE-07",
+        vehicleType: "BIKE",
+        make: "Hero",
+        model: "Splendor",
+        year: 2021,
+        licensePlate: "MH01EF9012",
+        status: "MAINTENANCE",
+        currentLatitude: "19.113640",
+        currentLongitude: "72.869720",
+      },
+      {
+        fleetId: fleet.id,
+        vehicleNumber: "TRK-009",
+        vehicleType: "TRUCK",
+        make: "Ashok Leyland",
+        model: "Boss",
+        year: 2020,
+        licensePlate: "MH12GH3456",
+        status: "INACTIVE",
+        currentLatitude: "19.033050",
+        currentLongitude: "73.029660",
+      },
     ])
     .returning();
 

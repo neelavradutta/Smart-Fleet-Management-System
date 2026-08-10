@@ -57,6 +57,18 @@ const vehicles = [
     currentLatitude: "19.113640",
     currentLongitude: "72.869720",
   },
+  {
+    id: "22222222-2222-2222-2222-222222222224",
+    vehicleNumber: "TRK-009",
+    vehicleType: "TRUCK",
+    make: "Ashok Leyland",
+    model: "Boss",
+    licensePlate: "MH12GH3456",
+    status: "INACTIVE",
+    currentDriverName: null,
+    currentLatitude: "19.033050",
+    currentLongitude: "73.029660",
+  },
 ];
 
 const drivers = [
