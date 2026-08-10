@@ -787,7 +787,7 @@ export function VehicleDetailsOverlay({
                     ],
                     ["Vehicle color", vehicleView.color ?? "—"],
                     ["Fuel type", vehicleView.fuelType ?? "—"],
-                    ["Transmission", vehicleView.transmission ?? "—"],
+                    ["Carbon copy / CC", vehicleView.carbonCopy ?? "—"],
                     ["Engine number", vehicleView.engineNumber ?? "—"],
                     [
                       "Chassis number",

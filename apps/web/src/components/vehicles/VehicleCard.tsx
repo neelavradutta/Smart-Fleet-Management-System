@@ -15,7 +15,7 @@ export type VehicleCardModel = {
   year?: number | null;
   color?: string | null;
   fuelType?: string | null;
-  transmission?: string | null;
+  carbonCopy?: string | null;
   engineNumber?: string | null;
   chassisNumber?: string | null;
   vin?: string | null;

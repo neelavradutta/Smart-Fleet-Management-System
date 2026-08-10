@@ -19,7 +19,7 @@ const emptyForm = {
   year: "",
   color: "",
   fuelType: "DIESEL",
-  transmission: "",
+  carbonCopy: "",
   engineNumber: "",
   chassisNumber: "",
   registrationDate: "",
@@ -143,7 +143,7 @@ export function NewVehicleFormOverlay({
         year: form.year ? Number(form.year) : null,
         color: form.color.trim() || null,
         fuelType: form.fuelType || null,
-        transmission: form.transmission.trim() || null,
+        carbonCopy: form.carbonCopy.trim() || null,
         engineNumber: form.engineNumber.trim() || null,
         chassisNumber: form.chassisNumber.trim() || null,
         vin: form.chassisNumber.trim() || null,
@@ -325,12 +325,12 @@ export function NewVehicleFormOverlay({
                     ))}
                   </select>
                 </Field>
-                <Field label="Transmission">
+                <Field label="Carbon copy / CC">
                   <input
                     className={fieldClass}
-                    value={form.transmission}
-                    onChange={set("transmission")}
-                    placeholder="Manual 6-speed"
+                    value={form.carbonCopy}
+                    onChange={set("carbonCopy")}
+                    placeholder="e.g. 2956"
                   />
                 </Field>
                 <Field label="Engine number">
