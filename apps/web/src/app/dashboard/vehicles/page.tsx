@@ -12,7 +12,7 @@ import { VehicleDetailsOverlay } from "@/components/vehicles/VehicleDetailsOverl
 import { NewVehicleFormOverlay } from "@/components/vehicles/NewVehicleFormOverlay";
 import { Button } from "@/components/common/Button";
 import { PageHero } from "@/components/common/PageHero";
-import { Plus } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 
 function VehiclesPageInner() {
   const [rows, setRows] = useState<VehicleCardModel[]>([]);
@@ -56,12 +56,11 @@ function VehiclesPageInner() {
     return rows
       .filter((v) => (status === "all" ? true : v.status === status))
       .filter((v) => {
-        const q = search.toLowerCase();
+        const q = search.trim().toLowerCase();
         if (!q) return true;
-        return (
-          v.vehicleNumber.toLowerCase().includes(q) ||
-          (v.licensePlate ?? "").toLowerCase().includes(q)
-        );
+        const vehicleNumber = (v.vehicleNumber ?? "").toLowerCase();
+        const registrationNumber = (v.licensePlate ?? "").toLowerCase();
+        return vehicleNumber.includes(q) || registrationNumber.includes(q);
       });
   }, [rows, status, search]);
 
@@ -81,12 +80,21 @@ function VehiclesPageInner() {
       />
 
       <div className="flex flex-wrap gap-3 items-center">
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search number or plate…"
-          className="rounded-xl border-amber-200 bg-amber-50/40 focus:border-fuchsia-400 focus:ring-fuchsia-400 min-w-[220px]"
-        />
+        <label className="relative inline-flex items-center">
+          <Search
+            size={16}
+            className="pointer-events-none absolute left-3 text-amber-700/70"
+            aria-hidden
+          />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search vehicle number or registration number…"
+            aria-label="Search vehicle number or registration number"
+            size={44}
+            className="w-auto max-w-full rounded-xl border-amber-200 bg-amber-50/40 pl-9 focus:border-fuchsia-400 focus:ring-fuchsia-400"
+          />
+        </label>
         {["all", "ACTIVE", "MAINTENANCE", "INACTIVE"].map((s) => (
           <Button
             key={s}
