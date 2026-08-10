@@ -126,6 +126,20 @@
   }
 }
 
+@keyframes sf-badge-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.15;
+  }
+}
+
+.sf-badge-blink {
+  animation: sf-badge-blink 1s ease-in-out infinite;
+}
+
 .sf-map-shell {
   position: relative;
   width: 100%;

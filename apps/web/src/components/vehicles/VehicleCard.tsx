@@ -56,10 +56,17 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleCardModel }) {
               <p className="text-xs text-slate-600 mt-1">{driverLine}</p>
             </div>
             <Badge
-              pulse={isActive}
+              pulse
+              dotClassName={
+                isActive
+                  ? "bg-red-500"
+                  : status === "maintenance"
+                    ? "bg-amber-400"
+                    : "bg-black"
+              }
               tone={
                 isActive
-                  ? "success"
+                  ? "danger"
                   : status === "maintenance"
                     ? "warning"
                     : "neutral"
