@@ -122,10 +122,10 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleCardModel }) {
               <motion.div
                 animate={{ scale: [1, 1.04, 1] }}
                 transition={{ repeat: Infinity, duration: 1.6 }}
-                className="flex items-center gap-2 px-3 py-1.5 bg-rose-100 rounded-xl border border-rose-200"
+                className="flex items-center gap-2 px-3 py-1.5 bg-red-700 rounded-xl border border-red-900"
               >
-                <AlertCircle size={14} className="text-rose-600" />
-                <span className="text-xs font-medium text-rose-700">
+                <AlertCircle size={14} className="text-red-100" />
+                <span className="text-xs font-semibold text-red-50">
                   Service Required
                 </span>
               </motion.div>
