@@ -15,7 +15,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   AlertCircle,
   ChevronDown,
-  FileText,
+  ClipboardList,
   HeartPulse,
   IndianRupee,
   MapPin,
@@ -26,26 +26,163 @@ import {
   User,
   X,
 } from "lucide-react";
-import { api } from "@/lib/api";
 import { Badge } from "@/components/common/Badge";
 import { cn } from "@/utils/cn";
 import type { VehicleCardModel } from "@/components/vehicles/VehicleCard";
 
-type AlertRow = {
+type ComplianceAlert = {
   id: string;
-  alertType: string;
-  alertSeverity: string;
-  alertMessage: string;
-  isResolved: boolean;
-  createdAt: string;
+  severity: "CRITICAL" | "WARNING" | "INFO";
+  label: string;
+  message: string;
+  daysLeft: number | null;
 };
 
-type DocRow = {
-  id: string;
-  title: string;
-  docType: string;
-  expiresAt?: string | null;
-};
+function parseDateOnly(value?: string | null): Date | null {
+  if (!value || value === "—" || value.toUpperCase() === "N/A") return null;
+  const d = new Date(value);
+  return Number.isNaN(d.getTime()) ? null : d;
+}
+
+function daysUntil(date: Date): number {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(date);
+  end.setHours(0, 0, 0, 0);
+  return Math.round((end.getTime() - start.getTime()) / 86400000);
+}
+
+/** Alerts only from overlay compliance dates (expiry soon / expired). */
+function buildComplianceAlerts(vehicle: VehicleCardModel): ComplianceAlert[] {
+  const WARN_DAYS = 60;
+  const checks: Array<{ id: string; label: string; date?: string | null }> = [
+    {
+      id: "registration",
+      label: "Registration",
+      date: vehicle.registrationExpiry,
+    },
+    {
+      id: "insurance",
+      label: "Insurance",
+      date: vehicle.insuranceExpiryDate,
+    },
+    { id: "puc", label: "PUC", date: vehicle.pucExpiryDate },
+    { id: "permit", label: "Permit", date: vehicle.permitExpiry },
+  ];
+
+  const out: ComplianceAlert[] = [];
+
+  for (const check of checks) {
+    const d = parseDateOnly(check.date);
+    if (!d) continue;
+    const left = daysUntil(d);
+    if (left < 0) {
+      out.push({
+        id: check.id,
+        severity: "CRITICAL",
+        label: `${check.label} expired`,
+        message: `${check.label} expired on ${check.date} (${Math.abs(left)} day${Math.abs(left) === 1 ? "" : "s"} ago).`,
+        daysLeft: left,
+      });
+    } else if (left <= WARN_DAYS) {
+      out.push({
+        id: check.id,
+        severity: left <= 15 ? "CRITICAL" : "WARNING",
+        label: `${check.label} expiring`,
+        message: `${check.label} expires on ${check.date} — ${left} day${left === 1 ? "" : "s"} left.`,
+        daysLeft: left,
+      });
+    }
+  }
+
+  const fitness = vehicle.fitnessCertificate?.toLowerCase() ?? "";
+  if (fitness.includes("expired")) {
+    out.push({
+      id: "fitness",
+      severity: "CRITICAL",
+      label: "Fitness expired",
+      message: vehicle.fitnessCertificate ?? "Fitness certificate expired.",
+      daysLeft: null,
+    });
+  }
+
+  if (vehicle.insuranceStatus?.toUpperCase() === "EXPIRED") {
+    const d = parseDateOnly(vehicle.insuranceExpiryDate);
+    const left = d ? daysUntil(d) : -1;
+    // Status alone only alerts if date also expired / missing — renew clears both.
+    if ((left < 0 || !d) && !out.some((a) => a.id === "insurance")) {
+      out.push({
+        id: "insurance-status",
+        severity: "CRITICAL",
+        label: "Insurance inactive",
+        message: "Insurance status is EXPIRED on this vehicle.",
+        daysLeft: left < 0 ? left : null,
+      });
+    }
+  }
+
+  // Soonest expiry first, then expired
+  out.sort((a, b) => {
+    const av = a.daysLeft ?? -9999;
+    const bv = b.daysLeft ?? -9999;
+    return av - bv;
+  });
+
+  return out;
+}
+
+function addYearsIso(value?: string | null, years = 1): string {
+  const base = parseDateOnly(value) ?? new Date();
+  const next = new Date(base);
+  next.setFullYear(next.getFullYear() + years);
+  return next.toISOString().slice(0, 10);
+}
+
+function todayIso(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/** Apply renewal so that document's expiry alert vanishes from overlay data. */
+function renewDocumentPatch(
+  alertId: string,
+  vehicle: VehicleCardModel,
+): Partial<VehicleCardModel> {
+  switch (alertId) {
+    case "registration":
+      return {
+        registrationExpiry: addYearsIso(vehicle.registrationExpiry, 5),
+        registrationStatus: "ACTIVE",
+      };
+    case "insurance":
+    case "insurance-status":
+      return {
+        insuranceStartDate: todayIso(),
+        insuranceExpiryDate: addYearsIso(
+          vehicle.insuranceExpiryDate ?? todayIso(),
+          1,
+        ),
+        insuranceStatus: "ACTIVE",
+      };
+    case "puc":
+      return {
+        pucIssueDate: todayIso(),
+        pucExpiryDate: addYearsIso(vehicle.pucExpiryDate ?? todayIso(), 1),
+      };
+    case "permit":
+      return {
+        permitExpiry: addYearsIso(vehicle.permitExpiry ?? todayIso(), 1),
+        permitStatus: "ACTIVE",
+      };
+    case "fitness":
+      return {
+        fitnessCertificate: (vehicle.fitnessCertificate ?? "Fitness")
+          .replace(/expired/gi, "Valid")
+          .replace(/\s·\sValid$/i, " · Valid"),
+      };
+    default:
+      return {};
+  }
+}
 
 const panelVariants = {
   hidden: { opacity: 0, y: 48, scale: 0.94 },
@@ -467,8 +604,9 @@ export function VehicleDetailsOverlay({
   onClose: () => void;
 }) {
   const [mounted, setMounted] = useState(false);
-  const [alerts, setAlerts] = useState<AlertRow[]>([]);
-  const [docs, setDocs] = useState<DocRow[]>([]);
+  const [liveVehicle, setLiveVehicle] = useState<VehicleCardModel | null>(
+    vehicle,
+  );
   const reduce = useReducedMotion();
 
   useEffect(() => {
@@ -476,33 +614,8 @@ export function VehicleDetailsOverlay({
   }, []);
 
   useEffect(() => {
-    if (!open || !vehicle) return;
-    let alive = true;
-    const number = vehicle.vehicleNumber;
-
-    Promise.all([
-      api<{ data: AlertRow[] }>("/api/v1/alerts").catch(() => ({ data: [] })),
-      api<{ data: DocRow[] }>("/api/v1/documents").catch(() => ({ data: [] })),
-    ]).then(([aRes, docRes]) => {
-      if (!alive) return;
-      setAlerts(
-        aRes.data.filter(
-          (a) =>
-            !a.isResolved &&
-            a.alertMessage.toUpperCase().includes(number.toUpperCase()),
-        ),
-      );
-      setDocs(
-        docRes.data.filter((d) =>
-          d.title.toUpperCase().includes(number.toUpperCase()),
-        ),
-      );
-    });
-
-    return () => {
-      alive = false;
-    };
-  }, [open, vehicle]);
+    if (vehicle) setLiveVehicle({ ...vehicle });
+  }, [vehicle]);
 
   useEffect(() => {
     if (!open) return;
@@ -516,13 +629,26 @@ export function VehicleDetailsOverlay({
   }, [open, onClose]);
 
   const ops = useMemo(
-    () => (vehicle ? derivedOps(vehicle) : null),
-    [vehicle],
+    () => (liveVehicle ? derivedOps(liveVehicle) : null),
+    [liveVehicle],
   );
+
+  const complianceAlerts = useMemo(
+    () => (liveVehicle ? buildComplianceAlerts(liveVehicle) : []),
+    [liveVehicle],
+  );
+
+  const renewDocument = (alertId: string) => {
+    setLiveVehicle((prev) => {
+      if (!prev) return prev;
+      return { ...prev, ...renewDocumentPatch(alertId, prev) };
+    });
+  };
 
   if (!mounted) return null;
 
-  const status = vehicle?.status.toLowerCase() ?? "";
+  const vehicleView = liveVehicle;
+  const status = vehicleView?.status.toLowerCase() ?? "";
   const isActive = status === "active";
   const isMaintenance = status === "maintenance";
   const headerBg = isActive
@@ -543,7 +669,7 @@ export function VehicleDetailsOverlay({
 
   return createPortal(
     <AnimatePresence>
-      {open && vehicle && ops ? (
+      {open && vehicleView && ops ? (
         <div className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center p-0 sm:p-6">
           <motion.div
             initial={{ opacity: 0 }}
@@ -581,30 +707,30 @@ export function VehicleDetailsOverlay({
                       dotClassName={badgeDot}
                       className="bg-white/95"
                     >
-                      {vehicle.status}
+                      {vehicleView.status}
                     </Badge>
                     <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-white">
-                      {vehicle.vehicleType ?? "Vehicle"}
+                      {vehicleView.vehicleType ?? "Vehicle"}
                     </span>
                   </div>
                   <h2
                     id="vehicle-detail-title"
                     className="mt-3 font-display text-2xl sm:text-3xl font-semibold text-white truncate"
                   >
-                    {vehicle.vehicleNumber}
+                    {vehicleView.vehicleNumber}
                   </h2>
                   <p className="mt-1 text-sm text-white/90">
-                    {[vehicle.make, vehicle.model].filter(Boolean).join(" ") ||
+                    {[vehicleView.make, vehicleView.model].filter(Boolean).join(" ") ||
                       "Fleet unit"}
-                    {vehicle.year ? ` · ${vehicle.year}` : ""}
+                    {vehicleView.year ? ` · ${vehicleView.year}` : ""}
                   </p>
                   <p className="mt-2 flex items-center gap-1.5 text-xs text-white/80">
                     <MapPin size={13} />
-                    {vehicle.currentLatitude && vehicle.currentLongitude
-                      ? `${Number(vehicle.currentLatitude).toFixed(4)}, ${Number(vehicle.currentLongitude).toFixed(4)}`
+                    {vehicleView.currentLatitude && vehicleView.currentLongitude
+                      ? `${Number(vehicleView.currentLatitude).toFixed(4)}, ${Number(vehicleView.currentLongitude).toFixed(4)}`
                       : "No GPS fix"}
                     <span className="opacity-70">
-                      · GPS {relativeTime(vehicle.lastLocationUpdate)}
+                      · GPS {relativeTime(vehicleView.lastLocationUpdate)}
                     </span>
                   </p>
                 </motion.div>
@@ -676,7 +802,7 @@ export function VehicleDetailsOverlay({
                   formatBump={bumpKm}
                 />
                 <LiveMetricTile
-                  label="Vehicle spend"
+                  label="Vehicle spending"
                   icon={IndianRupee}
                   iconTint="bg-amber-50 text-amber-700"
                   bumpClass="bg-amber-500"
@@ -718,26 +844,26 @@ export function VehicleDetailsOverlay({
               >
                 <div className="grid sm:grid-cols-2 gap-x-6 gap-y-3 rounded-2xl border border-slate-200 bg-white p-4">
                   {[
-                    ["Vehicle number", vehicle.vehicleNumber],
+                    ["Vehicle number", vehicleView.vehicleNumber],
                     [
                       "Registration number",
-                      vehicle.licensePlate ?? "—",
+                      vehicleView.licensePlate ?? "—",
                     ],
-                    ["Vehicle type", vehicle.vehicleType ?? "—"],
-                    ["Make / manufacturer", vehicle.make ?? "—"],
-                    ["Model", vehicle.model ?? "—"],
-                    ["Variant", vehicle.variant ?? "—"],
+                    ["Vehicle type", vehicleView.vehicleType ?? "—"],
+                    ["Make / manufacturer", vehicleView.make ?? "—"],
+                    ["Model", vehicleView.model ?? "—"],
+                    ["Variant", vehicleView.variant ?? "—"],
                     [
                       "Manufacturing year",
-                      vehicle.year?.toString() ?? "—",
+                      vehicleView.year?.toString() ?? "—",
                     ],
-                    ["Vehicle color", vehicle.color ?? "—"],
-                    ["Fuel type", vehicle.fuelType ?? "—"],
-                    ["Transmission", vehicle.transmission ?? "—"],
-                    ["Engine number", vehicle.engineNumber ?? "—"],
+                    ["Vehicle color", vehicleView.color ?? "—"],
+                    ["Fuel type", vehicleView.fuelType ?? "—"],
+                    ["Transmission", vehicleView.transmission ?? "—"],
+                    ["Engine number", vehicleView.engineNumber ?? "—"],
                     [
                       "Chassis number",
-                      vehicle.chassisNumber ?? vehicle.vin ?? "—",
+                      vehicleView.chassisNumber ?? vehicleView.vin ?? "—",
                     ],
                   ].map(([k, v]) => (
                     <div key={k} className="flex justify-between gap-3 text-sm">
@@ -756,74 +882,181 @@ export function VehicleDetailsOverlay({
                   Assigned drivers
                 </h3>
                 <AssignedDriversBlock
-                  history={vehicle.driverHistory ?? []}
+                  history={vehicleView.driverHistory ?? []}
                 />
               </motion.section>
 
               <OverlaySection
-                title="Open alerts"
-                icon={AlertCircle}
-                iconClass="text-amber-600"
+                title="Registration details"
+                icon={ClipboardList}
+                iconClass="text-indigo-600"
               >
-                {alerts.length ? (
-                  <ul className="space-y-2">
-                    {alerts.map((a, i) => (
-                      <motion.li
-                        key={a.id}
-                        initial={{ opacity: 0, x: -8 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.15 + i * 0.05 }}
-                        className="rounded-xl border border-amber-200 bg-amber-50/70 px-3 py-2.5"
+                <div className="grid sm:grid-cols-2 gap-x-6 gap-y-3 rounded-2xl border border-slate-200 bg-white p-4">
+                  {[
+                    [
+                      "Registration date",
+                      vehicleView.registrationDate ?? "—",
+                    ],
+                    [
+                      "Registration expiry",
+                      vehicleView.registrationExpiry ?? "—",
+                    ],
+                    [
+                      "Registration authority / RTO",
+                      vehicleView.registrationAuthority ?? "—",
+                    ],
+                    [
+                      "Registration status",
+                      vehicleView.registrationStatus ?? "—",
+                    ],
+                  ].map(([k, v]) => (
+                    <div key={k} className="flex justify-between gap-3 text-sm">
+                      <span className="text-slate-500 shrink-0">{k}</span>
+                      <span
+                        className={cn(
+                          "font-medium text-right break-all",
+                          k === "Registration status" &&
+                            String(v).toUpperCase() === "ACTIVE"
+                            ? "text-emerald-700"
+                            : k === "Registration status" &&
+                                String(v).toUpperCase() === "INACTIVE"
+                              ? "text-slate-500"
+                              : "text-slate-900",
+                        )}
                       >
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-[11px] font-bold uppercase tracking-wide text-amber-800">
-                            {a.alertSeverity} · {a.alertType.replaceAll("_", " ")}
-                          </span>
-                          <span className="text-[10px] text-slate-500">
-                            {relativeTime(a.createdAt)}
-                          </span>
-                        </div>
-                        <p className="text-sm text-slate-800 mt-1">
-                          {a.alertMessage}
-                        </p>
-                      </motion.li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-sm text-slate-500 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                    No open alerts for this vehicle.
-                  </p>
-                )}
+                        {v}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </OverlaySection>
 
               <OverlaySection
-                title="Compliance documents"
-                icon={FileText}
-                iconClass="text-sky-600"
+                title="Insurance & PUC compliance"
+                icon={Shield}
+                iconClass="text-emerald-600"
               >
-                {docs.length ? (
-                  <ul className="space-y-2">
-                    {docs.map((d) => (
-                      <li
-                        key={d.id}
-                        className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 px-3 py-2.5"
+                <div className="grid sm:grid-cols-2 gap-x-6 gap-y-3 rounded-2xl border border-slate-200 bg-white p-4">
+                  {[
+                    [
+                      "Insurance provider",
+                      vehicleView.insuranceProvider ?? "—",
+                    ],
+                    ["Policy number", vehicleView.policyNumber ?? "—"],
+                    [
+                      "Insurance start date",
+                      vehicleView.insuranceStartDate ?? "—",
+                    ],
+                    [
+                      "Insurance expiry date",
+                      vehicleView.insuranceExpiryDate ?? "—",
+                    ],
+                    [
+                      "Insurance status",
+                      vehicleView.insuranceStatus ?? "—",
+                    ],
+                    [
+                      "PUC certificate number",
+                      vehicleView.pucCertificateNumber ?? "—",
+                    ],
+                    ["PUC issue date", vehicleView.pucIssueDate ?? "—"],
+                    ["PUC expiry date", vehicleView.pucExpiryDate ?? "—"],
+                    [
+                      "Fitness certificate",
+                      vehicleView.fitnessCertificate ?? "—",
+                    ],
+                    ["Permit status", vehicleView.permitStatus ?? "—"],
+                    ["Permit expiry", vehicleView.permitExpiry ?? "—"],
+                  ].map(([k, v]) => (
+                    <div key={k} className="flex justify-between gap-3 text-sm">
+                      <span className="text-slate-500 shrink-0">{k}</span>
+                      <span
+                        className={cn(
+                          "font-medium text-right break-all",
+                          (k === "Insurance status" ||
+                            k === "Permit status") &&
+                            String(v).toUpperCase() === "ACTIVE"
+                            ? "text-emerald-700"
+                            : (k === "Insurance status" ||
+                                  k === "Permit status") &&
+                                ["INACTIVE", "EXPIRED"].includes(
+                                  String(v).toUpperCase(),
+                                )
+                              ? "text-rose-600"
+                              : "text-slate-900",
+                        )}
                       >
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-slate-900 truncate">
-                            {d.title}
+                        {v}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </OverlaySection>
+
+              <OverlaySection
+                title="Alerts"
+                icon={AlertCircle}
+                iconClass="text-amber-600"
+              >
+                {complianceAlerts.length ? (
+                  <ul className="space-y-2">
+                    {complianceAlerts.map((a, i) => {
+                      const critical = a.severity === "CRITICAL";
+                      return (
+                        <motion.li
+                          key={a.id}
+                          initial={{ opacity: 0, x: -8 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.15 + i * 0.05 }}
+                          className={cn(
+                            "rounded-xl border px-3 py-2.5",
+                            critical
+                              ? "border-rose-200 bg-rose-50/80"
+                              : "border-amber-200 bg-amber-50/70",
+                          )}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span
+                              className={cn(
+                                "text-[11px] font-bold uppercase tracking-wide",
+                                critical
+                                  ? "text-rose-800"
+                                  : "text-amber-800",
+                              )}
+                            >
+                              {a.severity} · {a.label}
+                            </span>
+                            {a.daysLeft != null ? (
+                              <span className="text-[10px] text-slate-500">
+                                {a.daysLeft < 0
+                                  ? `${Math.abs(a.daysLeft)}d overdue`
+                                  : `${a.daysLeft}d left`}
+                              </span>
+                            ) : null}
+                          </div>
+                          <p className="text-sm text-slate-800 mt-1">
+                            {a.message}
                           </p>
-                          <p className="text-[11px] text-slate-500">
-                            {d.docType}
-                            {d.expiresAt ? ` · expires ${d.expiresAt}` : ""}
-                          </p>
-                        </div>
-                        <FileText size={14} className="text-slate-300 shrink-0" />
-                      </li>
-                    ))}
+                          <button
+                            type="button"
+                            onClick={() => renewDocument(a.id)}
+                            className={cn(
+                              "mt-2 text-xs font-semibold underline-offset-2 hover:underline",
+                              critical
+                                ? "text-rose-700"
+                                : "text-amber-700",
+                            )}
+                          >
+                            Mark renewed
+                          </button>
+                        </motion.li>
+                      );
+                    })}
                   </ul>
                 ) : (
                   <p className="text-sm text-slate-500 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                    No vehicle documents linked yet.
+                    No document expiry alerts — registration, insurance, PUC
+                    and permit look clear.
                   </p>
                 )}
               </OverlaySection>
