@@ -3,15 +3,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import {
+  AnimatePresence,
+  animate,
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  useTransform,
+} from "framer-motion";
+import type { LucideIcon } from "lucide-react";
 import {
   AlertCircle,
   FileText,
-  Fuel,
-  Gauge,
   HeartPulse,
+  IndianRupee,
   MapPin,
   Navigation,
+  Route,
   Shield,
   Truck,
   User,
@@ -99,10 +107,159 @@ function derivedOps(vehicle: VehicleCardModel) {
   const speedKmh =
     vehicle.status.toLowerCase() === "active" ? 28 + (seed % 42) : 0;
   const odometerKm = 18000 + (seed % 22000);
-  const co2TodayKg = Number(((speedKmh > 0 ? 4.2 : 0.3) + (seed % 7) * 0.35).toFixed(1));
+  const co2TodayKg = Number(
+    ((speedKmh > 0 ? 4.2 : 0.3) + (seed % 7) * 0.35).toFixed(1),
+  );
   const tripsToday =
     vehicle.status.toLowerCase() === "active" ? 2 + (seed % 4) : 0;
-  return { health, fuel, speedKmh, odometerKm, co2TodayKg, tripsToday };
+  const fuelSpend = 85000 + (seed % 55) * 2400;
+  const maintenanceSpend = 22000 + (seed % 40) * 1800;
+  const challanSpend = (seed % 9) * 1500;
+  const totalSpend = fuelSpend + maintenanceSpend + challanSpend;
+  return {
+    health,
+    fuel,
+    speedKmh,
+    odometerKm,
+    co2TodayKg,
+    tripsToday,
+    fuelSpend,
+    maintenanceSpend,
+    challanSpend,
+    totalSpend,
+  };
+}
+
+function formatInr(amount: number): string {
+  return `₹${amount.toLocaleString("en-IN")}`;
+}
+
+const fmtPct = (n: number) => `${n}%`;
+const fmtKm = (n: number) => `${n.toLocaleString("en-IN")} km`;
+const fmtTrips = (n: number) => String(n);
+const bumpPct = (d: number) => `+${d}%`;
+const bumpKm = (d: number) => `+${d} km`;
+const bumpInr = (d: number) => `+₹${d.toLocaleString("en-IN")}`;
+const bumpTrips = (d: number) => `+${d}`;
+
+function LiveMetricTile({
+  label,
+  icon: Icon,
+  iconTint,
+  bumpClass,
+  base,
+  active,
+  reduce,
+  intervalMs,
+  firstDelayMs,
+  deltaMin,
+  deltaMax,
+  formatValue,
+  formatBump,
+  max,
+}: {
+  label: string;
+  icon: LucideIcon;
+  iconTint: string;
+  bumpClass: string;
+  base: number;
+  active: boolean;
+  reduce: boolean | null;
+  intervalMs: number;
+  firstDelayMs: number;
+  deltaMin: number;
+  deltaMax: number;
+  formatValue: (n: number) => string;
+  formatBump: (delta: number) => string;
+  max?: number;
+}) {
+  const [target, setTarget] = useState(base);
+  const [bump, setBump] = useState<{ id: number; delta: number } | null>(null);
+  const mv = useMotionValue(base);
+  const display = useTransform(mv, (v) => formatValue(Math.round(v)));
+
+  useEffect(() => {
+    setTarget(base);
+    mv.set(base);
+    setBump(null);
+  }, [base, mv]);
+
+  useEffect(() => {
+    if (!active) return;
+    const tick = () => {
+      const span = Math.max(0, deltaMax - deltaMin);
+      const delta = deltaMin + Math.floor(Math.random() * (span + 1));
+      setTarget((prev) => {
+        if (max != null && prev >= max) return prev;
+        const applied =
+          max != null ? Math.min(delta, max - prev) : delta;
+        if (applied > 0) {
+          queueMicrotask(() =>
+            setBump({ id: Date.now(), delta: applied }),
+          );
+        }
+        return prev + applied;
+      });
+    };
+    const id = window.setInterval(tick, intervalMs);
+    const first = window.setTimeout(tick, firstDelayMs);
+    return () => {
+      window.clearInterval(id);
+      window.clearTimeout(first);
+    };
+  }, [active, base, intervalMs, firstDelayMs, deltaMin, deltaMax, max]);
+
+  useEffect(() => {
+    if (reduce) {
+      mv.set(target);
+      return;
+    }
+    const ctrl = animate(mv, target, {
+      duration: 1.1,
+      ease: [0.22, 1, 0.36, 1],
+    });
+    return () => ctrl.stop();
+  }, [target, mv, reduce]);
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
+      <div
+        className={cn(
+          "mb-2 grid h-8 w-8 place-items-center rounded-xl",
+          iconTint,
+        )}
+      >
+        <Icon size={15} />
+      </div>
+      <p className="text-[11px] uppercase tracking-wide text-slate-500">
+        {label}
+      </p>
+      <motion.p className="text-lg font-semibold text-slate-900 leading-tight tabular-nums">
+        {display}
+      </motion.p>
+
+      <AnimatePresence>
+        {bump && !reduce ? (
+          <motion.span
+            key={bump.id}
+            initial={{ opacity: 0, y: 10, scale: 0.85 }}
+            animate={{ opacity: 1, y: -22, scale: 1 }}
+            exit={{ opacity: 0, y: -40, scale: 0.95 }}
+            transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
+            onAnimationComplete={() =>
+              setBump((cur) => (cur?.id === bump.id ? null : cur))
+            }
+            className={cn(
+              "pointer-events-none absolute right-2 top-9 rounded-full px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm",
+              bumpClass,
+            )}
+          >
+            {formatBump(bump.delta)}
+          </motion.span>
+        ) : null}
+      </AnimatePresence>
+    </div>
+  );
 }
 
 export function VehicleDetailsOverlay({
@@ -296,97 +453,67 @@ export function VehicleDetailsOverlay({
                 variants={child}
                 className="grid grid-cols-2 sm:grid-cols-4 gap-3"
               >
-                {[
-                  {
-                    label: "Health",
-                    value: `${ops.health}%`,
-                    icon: HeartPulse,
-                    tint: "bg-rose-50 text-rose-600",
-                  },
-                  {
-                    label: "Fuel",
-                    value: `${ops.fuel}%`,
-                    icon: Fuel,
-                    tint: "bg-amber-50 text-amber-600",
-                  },
-                  {
-                    label: "Speed",
-                    value: `${ops.speedKmh} km/h`,
-                    icon: Gauge,
-                    tint: "bg-sky-50 text-sky-600",
-                  },
-                  {
-                    label: "Trips today",
-                    value: String(ops.tripsToday),
-                    icon: Navigation,
-                    tint: "bg-emerald-50 text-emerald-600",
-                  },
-                ].map((m) => (
-                  <div
-                    key={m.label}
-                    className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3"
-                  >
-                    <div
-                      className={cn(
-                        "mb-2 grid h-8 w-8 place-items-center rounded-xl",
-                        m.tint,
-                      )}
-                    >
-                      <m.icon size={15} />
-                    </div>
-                    <p className="text-[11px] uppercase tracking-wide text-slate-500">
-                      {m.label}
-                    </p>
-                    <p className="text-lg font-semibold text-slate-900">
-                      {m.value}
-                    </p>
-                  </div>
-                ))}
-              </motion.div>
-
-              <motion.div variants={child} className="space-y-2">
-                <div className="flex justify-between text-xs">
-                  <span className="text-slate-500 inline-flex items-center gap-1">
-                    <HeartPulse size={12} className="text-rose-400" /> Health
-                  </span>
-                  <span className="font-semibold text-slate-900">
-                    {ops.health}%
-                  </span>
-                </div>
-                <div className="sf-bar">
-                  <motion.span
-                    initial={{ width: 0 }}
-                    animate={{ width: `${ops.health}%` }}
-                    transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
-                    className={
-                      ops.health > 80
-                        ? "!bg-emerald-500"
-                        : ops.health > 50
-                          ? "!bg-amber-500"
-                          : "!bg-rose-500"
-                    }
-                  />
-                </div>
-                <div className="flex justify-between text-xs pt-1">
-                  <span className="text-slate-500 inline-flex items-center gap-1">
-                    <Fuel size={12} className="text-amber-500" /> Fuel
-                  </span>
-                  <span className="font-semibold text-slate-900">
-                    {ops.fuel}%
-                  </span>
-                </div>
-                <div className="sf-bar">
-                  <motion.span
-                    initial={{ width: 0 }}
-                    animate={{ width: `${ops.fuel}%` }}
-                    transition={{
-                      duration: 0.85,
-                      delay: 0.08,
-                      ease: [0.22, 1, 0.36, 1],
-                    }}
-                    className="!bg-amber-500"
-                  />
-                </div>
+                <LiveMetricTile
+                  label="Health"
+                  icon={HeartPulse}
+                  iconTint="bg-rose-50 text-rose-600"
+                  bumpClass="bg-rose-500"
+                  base={ops.health}
+                  active={open}
+                  reduce={reduce}
+                  intervalMs={5200}
+                  firstDelayMs={2600}
+                  deltaMin={1}
+                  deltaMax={2}
+                  max={100}
+                  formatValue={fmtPct}
+                  formatBump={bumpPct}
+                />
+                <LiveMetricTile
+                  label="Odometer"
+                  icon={Route}
+                  iconTint="bg-sky-50 text-sky-600"
+                  bumpClass="bg-sky-500"
+                  base={ops.odometerKm}
+                  active={open}
+                  reduce={reduce}
+                  intervalMs={5000}
+                  firstDelayMs={2400}
+                  deltaMin={1}
+                  deltaMax={5}
+                  formatValue={fmtKm}
+                  formatBump={bumpKm}
+                />
+                <LiveMetricTile
+                  label="Vehicle spend"
+                  icon={IndianRupee}
+                  iconTint="bg-amber-50 text-amber-700"
+                  bumpClass="bg-amber-500"
+                  base={ops.totalSpend}
+                  active={open}
+                  reduce={reduce}
+                  intervalMs={4800}
+                  firstDelayMs={2200}
+                  deltaMin={80}
+                  deltaMax={450}
+                  formatValue={formatInr}
+                  formatBump={bumpInr}
+                />
+                <LiveMetricTile
+                  label="Trips today"
+                  icon={Navigation}
+                  iconTint="bg-emerald-50 text-emerald-600"
+                  bumpClass="bg-emerald-500"
+                  base={ops.tripsToday}
+                  active={open}
+                  reduce={reduce}
+                  intervalMs={5600}
+                  firstDelayMs={3000}
+                  deltaMin={1}
+                  deltaMax={1}
+                  formatValue={fmtTrips}
+                  formatBump={bumpTrips}
+                />
               </motion.div>
 
               <motion.section variants={child}>
@@ -413,8 +540,16 @@ export function VehicleDetailsOverlay({
                         : "—",
                     ],
                     [
-                      "Odometer",
-                      `${ops.odometerKm.toLocaleString()} km`,
+                      "Fuel spend",
+                      formatInr(ops.fuelSpend),
+                    ],
+                    [
+                      "Maintenance",
+                      formatInr(ops.maintenanceSpend),
+                    ],
+                    [
+                      "Challans",
+                      formatInr(ops.challanSpend),
                     ],
                     ["CO₂ today", `${ops.co2TodayKg} kg`],
                   ].map(([k, v]) => (
