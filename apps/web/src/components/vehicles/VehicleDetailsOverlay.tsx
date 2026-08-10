@@ -614,8 +614,9 @@ export function VehicleDetailsOverlay({
   }, []);
 
   useEffect(() => {
-    if (vehicle) setLiveVehicle({ ...vehicle });
-  }, [vehicle]);
+    if (!open || !vehicle) return;
+    setLiveVehicle({ ...vehicle });
+  }, [open, vehicle]);
 
   useEffect(() => {
     if (!open) return;
@@ -691,13 +692,7 @@ export function VehicleDetailsOverlay({
             exit="exit"
             className="relative z-10 w-full max-w-3xl max-h-[92vh] overflow-hidden rounded-t-[28px] sm:rounded-[28px] bg-white border border-slate-200 shadow-[0_28px_90px_-24px_rgba(15,23,42,0.4)]"
           >
-            <div className={cn("relative px-5 sm:px-7 pt-5 pb-6 overflow-hidden", headerBg)}>
-              <motion.span
-                aria-hidden
-                animate={reduce ? {} : { x: ["-40%", "140%"] }}
-                transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
-                className="pointer-events-none absolute inset-y-0 w-48 bg-white/15 blur-2xl"
-              />
+            <div className={cn("relative px-5 sm:px-7 pt-5 pb-6", headerBg)}>
               <div className="relative flex items-start justify-between gap-4">
                 <motion.div variants={child} className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
