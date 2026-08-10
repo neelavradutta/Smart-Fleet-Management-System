@@ -14,6 +14,7 @@ export type VehicleCardModel = {
   licensePlate?: string | null;
   currentLatitude?: string | null;
   currentLongitude?: string | null;
+  currentDriverName?: string | null;
   healthScore?: number;
   fuelLevel?: number;
   maintenanceDue?: boolean;
@@ -23,6 +24,10 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleCardModel }) {
   const health = vehicle.healthScore ?? 86;
   const fuel = vehicle.fuelLevel ?? 62;
   const status = vehicle.status.toLowerCase();
+  const isActive = status === "active";
+  const driverLine = isActive
+    ? `Current driver - ${vehicle.currentDriverName?.trim() || "—"}`
+    : "Not assigned";
 
   return (
     <Link href={`/dashboard/vehicles?focus=${vehicle.id}`}>
@@ -46,11 +51,20 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleCardModel }) {
                   vehicle.licensePlate ||
                   "—"}
               </p>
+              <p
+                className={
+                  isActive
+                    ? "text-xs text-slate-600 mt-1"
+                    : "text-xs text-slate-400 mt-1"
+                }
+              >
+                {driverLine}
+              </p>
             </div>
             <Badge
-              pulse={status === "active"}
+              pulse={isActive}
               tone={
-                status === "active"
+                isActive
                   ? "success"
                   : status === "maintenance"
                     ? "warning"

@@ -240,6 +240,105 @@ function MapZoomControl() {
   return createPortal(<MapZoomButtons map={map} />, host);
 }
 
+/** Shift popup inside map box — map camera stays put. */
+function FitPopupInBounds() {
+  const map = useMap();
+
+  useEffect(() => {
+    const timers: number[] = [];
+    const basePos = new WeakMap<L.Popup, L.Point>();
+
+    type PatchPopup = L.Popup & {
+      _updatePosition: () => void;
+      __sfUpdate?: () => void;
+    };
+
+    const nudge = (popup: L.Popup) => {
+      const el = popup.getElement();
+      if (!el) return;
+
+      let base = basePos.get(popup);
+      if (!base) {
+        const pos = L.DomUtil.getPosition(el);
+        if (!pos) return;
+        base = pos.clone();
+        basePos.set(popup, base);
+      } else {
+        L.DomUtil.setPosition(el, base);
+      }
+
+      const mapRect = map.getContainer().getBoundingClientRect();
+      const popRect = el.getBoundingClientRect();
+      const pad = 14;
+      let dx = 0;
+      let dy = 0;
+
+      if (popRect.left < mapRect.left + pad) {
+        dx = mapRect.left + pad - popRect.left;
+      }
+      if (popRect.right > mapRect.right - pad) {
+        dx = mapRect.right - pad - popRect.right;
+      }
+      if (popRect.top < mapRect.top + pad) {
+        dy = mapRect.top + pad - popRect.top;
+      }
+      if (popRect.bottom > mapRect.bottom - pad) {
+        dy = mapRect.bottom - pad - popRect.bottom;
+      }
+
+      if (dx || dy) {
+        L.DomUtil.setPosition(
+          el,
+          base.add(L.point(Math.round(dx), Math.round(dy))),
+        );
+      }
+    };
+
+    const schedule = (popup: L.Popup) => {
+      basePos.delete(popup);
+      const run = () => nudge(popup);
+      requestAnimationFrame(() => {
+        run();
+        timers.push(window.setTimeout(run, 60));
+        timers.push(window.setTimeout(run, 180));
+        timers.push(window.setTimeout(run, 350));
+      });
+    };
+
+    const onOpen = (e: L.PopupEvent) => {
+      const popup = e.popup as PatchPopup;
+      if (!popup.__sfUpdate) {
+        popup.__sfUpdate = popup._updatePosition.bind(popup);
+        popup._updatePosition = function patchedUpdatePosition() {
+          popup.__sfUpdate?.();
+          basePos.delete(popup);
+          requestAnimationFrame(() => nudge(popup));
+        };
+      }
+      schedule(popup);
+    };
+
+    const onClose = (e: L.PopupEvent) => {
+      const popup = e.popup as PatchPopup;
+      if (popup.__sfUpdate) {
+        popup._updatePosition = popup.__sfUpdate;
+        delete popup.__sfUpdate;
+      }
+      basePos.delete(popup);
+    };
+
+    map.on("popupopen", onOpen);
+    map.on("popupclose", onClose);
+    return () => {
+      map.off("popupopen", onOpen);
+      map.off("popupclose", onClose);
+      timers.forEach((t) => window.clearTimeout(t));
+    };
+  }, [map]);
+
+  return null;
+}
+
 export function VehicleMap({
   vehicles,
   focusId = null,
@@ -283,6 +382,7 @@ export function VehicleMap({
 
         <MapZoomControl />
         <MapLifecycle vehicles={vehicles} focusId={focusId} />
+        <FitPopupInBounds />
 
         {vehicles.map((vehicle) => {
           const status = vehicle.status ?? "active";
