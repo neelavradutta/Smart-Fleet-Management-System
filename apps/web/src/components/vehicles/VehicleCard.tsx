@@ -25,9 +25,11 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleCardModel }) {
   const fuel = vehicle.fuelLevel ?? 62;
   const status = vehicle.status.toLowerCase();
   const isActive = status === "active";
-  const driverLine = isActive
-    ? `Current driver - ${vehicle.currentDriverName?.trim() || "—"}`
-    : "Not assigned";
+  const driverName =
+    isActive && vehicle.currentDriverName?.trim()
+      ? vehicle.currentDriverName.trim()
+      : "unassigned";
+  const driverLine = `Current driver - ${driverName}`;
 
   return (
     <Link href={`/dashboard/vehicles?focus=${vehicle.id}`}>
@@ -51,15 +53,7 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleCardModel }) {
                   vehicle.licensePlate ||
                   "—"}
               </p>
-              <p
-                className={
-                  isActive
-                    ? "text-xs text-slate-600 mt-1"
-                    : "text-xs text-slate-400 mt-1"
-                }
-              >
-                {driverLine}
-              </p>
+              <p className="text-xs text-slate-600 mt-1">{driverLine}</p>
             </div>
             <Badge
               pulse={isActive}
