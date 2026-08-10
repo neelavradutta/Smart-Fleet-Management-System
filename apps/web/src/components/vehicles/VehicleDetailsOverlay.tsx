@@ -131,59 +131,6 @@ function buildComplianceAlerts(vehicle: VehicleCardModel): ComplianceAlert[] {
   return out;
 }
 
-function addYearsIso(value?: string | null, years = 1): string {
-  const base = parseDateOnly(value) ?? new Date();
-  const next = new Date(base);
-  next.setFullYear(next.getFullYear() + years);
-  return next.toISOString().slice(0, 10);
-}
-
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
-}
-
-/** Apply renewal so that document's expiry alert vanishes from overlay data. */
-function renewDocumentPatch(
-  alertId: string,
-  vehicle: VehicleCardModel,
-): Partial<VehicleCardModel> {
-  switch (alertId) {
-    case "registration":
-      return {
-        registrationExpiry: addYearsIso(vehicle.registrationExpiry, 5),
-        registrationStatus: "ACTIVE",
-      };
-    case "insurance":
-    case "insurance-status":
-      return {
-        insuranceStartDate: todayIso(),
-        insuranceExpiryDate: addYearsIso(
-          vehicle.insuranceExpiryDate ?? todayIso(),
-          1,
-        ),
-        insuranceStatus: "ACTIVE",
-      };
-    case "puc":
-      return {
-        pucIssueDate: todayIso(),
-        pucExpiryDate: addYearsIso(vehicle.pucExpiryDate ?? todayIso(), 1),
-      };
-    case "permit":
-      return {
-        permitExpiry: addYearsIso(vehicle.permitExpiry ?? todayIso(), 1),
-        permitStatus: "ACTIVE",
-      };
-    case "fitness":
-      return {
-        fitnessCertificate: (vehicle.fitnessCertificate ?? "Fitness")
-          .replace(/expired/gi, "Valid")
-          .replace(/\s·\sValid$/i, " · Valid"),
-      };
-    default:
-      return {};
-  }
-}
-
 const panelVariants = {
   hidden: { opacity: 0, y: 48, scale: 0.94 },
   visible: {
@@ -604,19 +551,11 @@ export function VehicleDetailsOverlay({
   onClose: () => void;
 }) {
   const [mounted, setMounted] = useState(false);
-  const [liveVehicle, setLiveVehicle] = useState<VehicleCardModel | null>(
-    vehicle,
-  );
   const reduce = useReducedMotion();
 
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  useEffect(() => {
-    if (!open || !vehicle) return;
-    setLiveVehicle({ ...vehicle });
-  }, [open, vehicle]);
 
   useEffect(() => {
     if (!open) return;
@@ -630,25 +569,18 @@ export function VehicleDetailsOverlay({
   }, [open, onClose]);
 
   const ops = useMemo(
-    () => (liveVehicle ? derivedOps(liveVehicle) : null),
-    [liveVehicle],
+    () => (vehicle ? derivedOps(vehicle) : null),
+    [vehicle],
   );
 
   const complianceAlerts = useMemo(
-    () => (liveVehicle ? buildComplianceAlerts(liveVehicle) : []),
-    [liveVehicle],
+    () => (vehicle ? buildComplianceAlerts(vehicle) : []),
+    [vehicle],
   );
-
-  const renewDocument = (alertId: string) => {
-    setLiveVehicle((prev) => {
-      if (!prev) return prev;
-      return { ...prev, ...renewDocumentPatch(alertId, prev) };
-    });
-  };
 
   if (!mounted) return null;
 
-  const vehicleView = liveVehicle;
+  const vehicleView = vehicle;
   const status = vehicleView?.status.toLowerCase() ?? "";
   const isActive = status === "active";
   const isMaintenance = status === "maintenance";
@@ -1032,18 +964,6 @@ export function VehicleDetailsOverlay({
                           <p className="text-sm text-slate-800 mt-1">
                             {a.message}
                           </p>
-                          <button
-                            type="button"
-                            onClick={() => renewDocument(a.id)}
-                            className={cn(
-                              "mt-2 text-xs font-semibold underline-offset-2 hover:underline",
-                              critical
-                                ? "text-rose-700"
-                                : "text-amber-700",
-                            )}
-                          >
-                            Mark renewed
-                          </button>
                         </motion.li>
                       );
                     })}
