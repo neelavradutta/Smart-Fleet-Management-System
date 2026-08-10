@@ -14,6 +14,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import {
   AlertCircle,
+  ChevronDown,
   FileText,
   HeartPulse,
   IndianRupee,
@@ -29,15 +30,6 @@ import { api } from "@/lib/api";
 import { Badge } from "@/components/common/Badge";
 import { cn } from "@/utils/cn";
 import type { VehicleCardModel } from "@/components/vehicles/VehicleCard";
-
-type DriverRow = {
-  fullName: string;
-  phone?: string | null;
-  licenseNumber?: string | null;
-  status?: string;
-  safetyScore?: string | number | null;
-  totalMiles?: number | null;
-};
 
 type AlertRow = {
   id: string;
@@ -128,6 +120,19 @@ function derivedOps(vehicle: VehicleCardModel) {
     challanSpend,
     totalSpend,
   };
+}
+
+function formatDateTime(iso?: string | null): string {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return d.toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 function formatInr(amount: number): string {
@@ -271,6 +276,187 @@ function LiveMetricTile({
   );
 }
 
+function OverlaySection({
+  title,
+  icon: Icon,
+  iconClass,
+  defaultOpen = true,
+  children,
+}: {
+  title: string;
+  icon: LucideIcon;
+  iconClass: string;
+  defaultOpen?: boolean;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  return (
+    <motion.section variants={child}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="mb-3 flex w-full items-center gap-2 text-left"
+      >
+        <Icon size={15} className={iconClass} />
+        <span className="font-display text-sm font-semibold text-slate-900 flex-1">
+          {title}
+        </span>
+        <motion.span
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.2 }}
+          className="text-slate-400"
+        >
+          <ChevronDown size={16} />
+        </motion.span>
+      </button>
+      <AnimatePresence initial={false}>
+        {open ? (
+          <motion.div
+            key="body"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            className="overflow-hidden"
+          >
+            {children}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </motion.section>
+  );
+}
+
+function DriverHistoryCard({
+  entry,
+}: {
+  entry: {
+    fullName: string;
+    checkInAt: string;
+    checkOutAt?: string | null;
+    safetyScore?: string | number | null;
+    totalMiles?: number | null;
+  };
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 p-4 flex flex-col sm:flex-row sm:items-center gap-4">
+      <div className="h-12 w-12 rounded-2xl bg-violet-100 text-violet-700 grid place-items-center shrink-0">
+        <User size={20} />
+      </div>
+      <div className="flex-1 min-w-0 space-y-1.5">
+        <p className="font-semibold text-slate-900">{entry.fullName}</p>
+        <div className="space-y-1 text-xs text-slate-500">
+          <p>
+            <span className="text-slate-400">Check-in</span>
+            <span className="ml-2 font-medium text-slate-700">
+              {formatDateTime(entry.checkInAt)}
+            </span>
+          </p>
+          <p>
+            <span className="text-slate-400">Check-out</span>
+            <span className="ml-2 font-medium text-slate-700">
+              {entry.checkOutAt
+                ? formatDateTime(entry.checkOutAt)
+                : "In progress"}
+            </span>
+          </p>
+        </div>
+      </div>
+      <div className="flex gap-3">
+        <div className="rounded-xl bg-emerald-50 px-3 py-2 text-center">
+          <p className="text-[10px] uppercase text-emerald-700/80 flex items-center gap-1 justify-center">
+            <Shield size={10} /> Safety
+          </p>
+          <p className="text-sm font-bold text-emerald-800">
+            {entry.safetyScore ?? "—"}
+          </p>
+        </div>
+        <div className="rounded-xl bg-sky-50 px-3 py-2 text-center">
+          <p className="text-[10px] uppercase text-sky-700/80">Miles</p>
+          <p className="text-sm font-bold text-sky-800">
+            {entry.totalMiles?.toLocaleString() ?? "—"}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AssignedDriversBlock({
+  history,
+}: {
+  history: NonNullable<VehicleCardModel["driverHistory"]>;
+}) {
+  const [showMore, setShowMore] = useState(false);
+  const sorted = useMemo(
+    () =>
+      [...history].sort(
+        (a, b) =>
+          new Date(b.checkInAt).getTime() - new Date(a.checkInAt).getTime(),
+      ),
+    [history],
+  );
+  const latest = sorted[0];
+  const previous = sorted.slice(1, 6);
+
+  if (!latest) {
+    return (
+      <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-5 text-sm text-slate-500">
+        No driver history for this vehicle.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <DriverHistoryCard entry={latest} />
+
+      {previous.length ? (
+        <div>
+          <button
+            type="button"
+            onClick={() => setShowMore((v) => !v)}
+            aria-expanded={showMore}
+            className="flex w-full items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-left text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+          >
+            <span>
+              {showMore ? "Hide" : "Show"} previous drivers ({previous.length})
+            </span>
+            <motion.span
+              animate={{ rotate: showMore ? 180 : 0 }}
+              transition={{ duration: 0.2 }}
+              className="text-slate-400"
+            >
+              <ChevronDown size={16} />
+            </motion.span>
+          </button>
+
+          <AnimatePresence initial={false}>
+            {showMore ? (
+              <motion.ul
+                key="prev-drivers"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                className="overflow-hidden space-y-3 mt-3"
+              >
+                {previous.map((entry, i) => (
+                  <li key={`${entry.fullName}-${entry.checkInAt}-${i}`}>
+                    <DriverHistoryCard entry={entry} />
+                  </li>
+                ))}
+              </motion.ul>
+            ) : null}
+          </AnimatePresence>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function VehicleDetailsOverlay({
   open,
   vehicle,
@@ -281,7 +467,6 @@ export function VehicleDetailsOverlay({
   onClose: () => void;
 }) {
   const [mounted, setMounted] = useState(false);
-  const [driver, setDriver] = useState<DriverRow | null>(null);
   const [alerts, setAlerts] = useState<AlertRow[]>([]);
   const [docs, setDocs] = useState<DocRow[]>([]);
   const reduce = useReducedMotion();
@@ -296,17 +481,10 @@ export function VehicleDetailsOverlay({
     const number = vehicle.vehicleNumber;
 
     Promise.all([
-      api<{ data: DriverRow[] }>("/api/v1/drivers").catch(() => ({ data: [] })),
       api<{ data: AlertRow[] }>("/api/v1/alerts").catch(() => ({ data: [] })),
       api<{ data: DocRow[] }>("/api/v1/documents").catch(() => ({ data: [] })),
-    ]).then(([dRes, aRes, docRes]) => {
+    ]).then(([aRes, docRes]) => {
       if (!alive) return;
-      const name = vehicle.currentDriverName?.trim();
-      setDriver(
-        name
-          ? (dRes.data.find((d) => d.fullName === name) ?? null)
-          : null,
-      );
       setAlerts(
         aRes.data.filter(
           (a) =>
@@ -533,106 +711,60 @@ export function VehicleDetailsOverlay({
                 />
               </motion.div>
 
-              <motion.section variants={child}>
-                <h3 className="font-display text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                  <Truck size={15} className="text-sky-600" />
-                  Vehicle profile
-                </h3>
+              <OverlaySection
+                title="Vehicle profile"
+                icon={Truck}
+                iconClass="text-sky-600"
+              >
                 <div className="grid sm:grid-cols-2 gap-x-6 gap-y-3 rounded-2xl border border-slate-200 bg-white p-4">
                   {[
-                    ["License plate", vehicle.licensePlate ?? "—"],
-                    ["VIN", vehicle.vin ?? "—"],
-                    ["Type", vehicle.vehicleType ?? "—"],
-                    ["Year", vehicle.year?.toString() ?? "—"],
+                    ["Vehicle number", vehicle.vehicleNumber],
                     [
-                      "Payload",
-                      vehicle.capacityWeightKg != null
-                        ? `${vehicle.capacityWeightKg.toLocaleString()} kg`
-                        : "—",
+                      "Registration number",
+                      vehicle.licensePlate ?? "—",
                     ],
+                    ["Vehicle type", vehicle.vehicleType ?? "—"],
+                    ["Make / manufacturer", vehicle.make ?? "—"],
+                    ["Model", vehicle.model ?? "—"],
+                    ["Variant", vehicle.variant ?? "—"],
                     [
-                      "Volume",
-                      vehicle.capacityVolumeM3 != null
-                        ? `${vehicle.capacityVolumeM3} m³`
-                        : "—",
+                      "Manufacturing year",
+                      vehicle.year?.toString() ?? "—",
                     ],
+                    ["Vehicle color", vehicle.color ?? "—"],
+                    ["Fuel type", vehicle.fuelType ?? "—"],
+                    ["Transmission", vehicle.transmission ?? "—"],
+                    ["Engine number", vehicle.engineNumber ?? "—"],
                     [
-                      "Fuel spend",
-                      formatInr(ops.fuelSpend),
+                      "Chassis number",
+                      vehicle.chassisNumber ?? vehicle.vin ?? "—",
                     ],
-                    [
-                      "Maintenance",
-                      formatInr(ops.maintenanceSpend),
-                    ],
-                    [
-                      "Challans",
-                      formatInr(ops.challanSpend),
-                    ],
-                    ["CO₂ today", `${ops.co2TodayKg} kg`],
                   ].map(([k, v]) => (
                     <div key={k} className="flex justify-between gap-3 text-sm">
-                      <span className="text-slate-500">{k}</span>
-                      <span className="font-medium text-slate-900 text-right">
+                      <span className="text-slate-500 shrink-0">{k}</span>
+                      <span className="font-medium text-slate-900 text-right break-all">
                         {v}
                       </span>
                     </div>
                   ))}
                 </div>
-              </motion.section>
+              </OverlaySection>
 
               <motion.section variants={child}>
-                <h3 className="font-display text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                <h3 className="mb-3 flex items-center gap-2 font-display text-sm font-semibold text-slate-900">
                   <User size={15} className="text-violet-600" />
-                  Assigned driver
+                  Assigned drivers
                 </h3>
-                {isActive && (driver || vehicle.currentDriverName) ? (
-                  <div className="rounded-2xl border border-slate-200 p-4 flex flex-col sm:flex-row sm:items-center gap-4">
-                    <div className="h-12 w-12 rounded-2xl bg-violet-100 text-violet-700 grid place-items-center shrink-0">
-                      <User size={20} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-slate-900">
-                        {driver?.fullName ?? vehicle.currentDriverName}
-                      </p>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        {driver?.phone ?? "Phone on file"}
-                        {driver?.licenseNumber
-                          ? ` · Lic ${driver.licenseNumber}`
-                          : ""}
-                      </p>
-                    </div>
-                    <div className="flex gap-3">
-                      <div className="rounded-xl bg-emerald-50 px-3 py-2 text-center">
-                        <p className="text-[10px] uppercase text-emerald-700/80 flex items-center gap-1 justify-center">
-                          <Shield size={10} /> Safety
-                        </p>
-                        <p className="text-sm font-bold text-emerald-800">
-                          {driver?.safetyScore ?? "—"}
-                        </p>
-                      </div>
-                      <div className="rounded-xl bg-sky-50 px-3 py-2 text-center">
-                        <p className="text-[10px] uppercase text-sky-700/80">
-                          Miles
-                        </p>
-                        <p className="text-sm font-bold text-sky-800">
-                          {driver?.totalMiles?.toLocaleString() ?? "—"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-5 text-sm text-slate-500">
-                    No driver assigned — unit is{" "}
-                    {status || "unavailable"} for dispatch.
-                  </div>
-                )}
+                <AssignedDriversBlock
+                  history={vehicle.driverHistory ?? []}
+                />
               </motion.section>
 
-              <motion.section variants={child}>
-                <h3 className="font-display text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                  <AlertCircle size={15} className="text-amber-600" />
-                  Open alerts
-                </h3>
+              <OverlaySection
+                title="Open alerts"
+                icon={AlertCircle}
+                iconClass="text-amber-600"
+              >
                 {alerts.length ? (
                   <ul className="space-y-2">
                     {alerts.map((a, i) => (
@@ -662,13 +794,13 @@ export function VehicleDetailsOverlay({
                     No open alerts for this vehicle.
                   </p>
                 )}
-              </motion.section>
+              </OverlaySection>
 
-              <motion.section variants={child}>
-                <h3 className="font-display text-sm font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                  <FileText size={15} className="text-sky-600" />
-                  Compliance documents
-                </h3>
+              <OverlaySection
+                title="Compliance documents"
+                icon={FileText}
+                iconClass="text-sky-600"
+              >
                 {docs.length ? (
                   <ul className="space-y-2">
                     {docs.map((d) => (
@@ -694,7 +826,7 @@ export function VehicleDetailsOverlay({
                     No vehicle documents linked yet.
                   </p>
                 )}
-              </motion.section>
+              </OverlaySection>
 
               <motion.div
                 variants={child}

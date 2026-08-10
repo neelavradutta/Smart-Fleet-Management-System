@@ -11,7 +11,13 @@ export type VehicleCardModel = {
   vehicleType?: string | null;
   make?: string | null;
   model?: string | null;
+  variant?: string | null;
   year?: number | null;
+  color?: string | null;
+  fuelType?: string | null;
+  transmission?: string | null;
+  engineNumber?: string | null;
+  chassisNumber?: string | null;
   vin?: string | null;
   licensePlate?: string | null;
   capacityWeightKg?: number | null;
@@ -19,6 +25,15 @@ export type VehicleCardModel = {
   currentLatitude?: string | null;
   currentLongitude?: string | null;
   currentDriverName?: string | null;
+  checkInAt?: string | null;
+  checkOutAt?: string | null;
+  driverHistory?: Array<{
+    fullName: string;
+    checkInAt: string;
+    checkOutAt?: string | null;
+    safetyScore?: string | number | null;
+    totalMiles?: number | null;
+  }>;
   lastLocationUpdate?: string | null;
   healthScore?: number;
   fuelLevel?: number;
