@@ -137,16 +137,18 @@ function formatInr(amount: number): string {
 const fmtPct = (n: number) => `${n}%`;
 const fmtKm = (n: number) => `${n.toLocaleString("en-IN")} km`;
 const fmtTrips = (n: number) => String(n);
-const bumpPct = (d: number) => `+${d}%`;
-const bumpKm = (d: number) => `+${d} km`;
-const bumpInr = (d: number) => `+₹${d.toLocaleString("en-IN")}`;
-const bumpTrips = (d: number) => `+${d}`;
+const bumpPct = (d: number) => `${d > 0 ? "+" : ""}${d}%`;
+const bumpKm = (d: number) => `${d > 0 ? "+" : ""}${d} km`;
+const bumpInr = (d: number) =>
+  `${d > 0 ? "+" : "-"}₹${Math.abs(d).toLocaleString("en-IN")}`;
+const bumpTrips = (d: number) => `${d > 0 ? "+" : ""}${d}`;
 
 function LiveMetricTile({
   label,
   icon: Icon,
   iconTint,
   bumpClass,
+  bumpDownClass,
   base,
   active,
   reduce,
@@ -156,12 +158,14 @@ function LiveMetricTile({
   deltaMax,
   formatValue,
   formatBump,
-  max,
+  min = Number.NEGATIVE_INFINITY,
+  max = Number.POSITIVE_INFINITY,
 }: {
   label: string;
   icon: LucideIcon;
   iconTint: string;
   bumpClass: string;
+  bumpDownClass?: string;
   base: number;
   active: boolean;
   reduce: boolean | null;
@@ -171,6 +175,7 @@ function LiveMetricTile({
   deltaMax: number;
   formatValue: (n: number) => string;
   formatBump: (delta: number) => string;
+  min?: number;
   max?: number;
 }) {
   const [target, setTarget] = useState(base);
@@ -187,18 +192,20 @@ function LiveMetricTile({
   useEffect(() => {
     if (!active) return;
     const tick = () => {
-      const span = Math.max(0, deltaMax - deltaMin);
-      const delta = deltaMin + Math.floor(Math.random() * (span + 1));
+      const rolled =
+        deltaMin + Math.floor(Math.random() * (deltaMax - deltaMin + 1));
+
       setTarget((prev) => {
-        if (max != null && prev >= max) return prev;
-        const applied =
-          max != null ? Math.min(delta, max - prev) : delta;
-        if (applied > 0) {
+        let next = prev + rolled;
+        if (next > max) next = max;
+        if (next < min) next = min;
+        const applied = next - prev;
+        if (applied !== 0) {
           queueMicrotask(() =>
             setBump({ id: Date.now(), delta: applied }),
           );
         }
-        return prev + applied;
+        return next;
       });
     };
     const id = window.setInterval(tick, intervalMs);
@@ -207,7 +214,7 @@ function LiveMetricTile({
       window.clearInterval(id);
       window.clearTimeout(first);
     };
-  }, [active, base, intervalMs, firstDelayMs, deltaMin, deltaMax, max]);
+  }, [active, base, intervalMs, firstDelayMs, deltaMin, deltaMax, min, max]);
 
   useEffect(() => {
     if (reduce) {
@@ -220,6 +227,8 @@ function LiveMetricTile({
     });
     return () => ctrl.stop();
   }, [target, mv, reduce]);
+
+  const down = (bump?.delta ?? 0) < 0;
 
   return (
     <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
@@ -242,16 +251,16 @@ function LiveMetricTile({
         {bump && !reduce ? (
           <motion.span
             key={bump.id}
-            initial={{ opacity: 0, y: 10, scale: 0.85 }}
-            animate={{ opacity: 1, y: -22, scale: 1 }}
-            exit={{ opacity: 0, y: -40, scale: 0.95 }}
+            initial={{ opacity: 0, y: down ? -10 : 10, scale: 0.85 }}
+            animate={{ opacity: 1, y: down ? 18 : -22, scale: 1 }}
+            exit={{ opacity: 0, y: down ? 36 : -40, scale: 0.95 }}
             transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
             onAnimationComplete={() =>
               setBump((cur) => (cur?.id === bump.id ? null : cur))
             }
             className={cn(
               "pointer-events-none absolute right-2 top-9 rounded-full px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm",
-              bumpClass,
+              down ? (bumpDownClass ?? bumpClass) : bumpClass,
             )}
           >
             {formatBump(bump.delta)}
@@ -458,13 +467,15 @@ export function VehicleDetailsOverlay({
                   icon={HeartPulse}
                   iconTint="bg-rose-50 text-rose-600"
                   bumpClass="bg-rose-500"
+                  bumpDownClass="bg-rose-700"
                   base={ops.health}
                   active={open}
                   reduce={reduce}
                   intervalMs={5200}
                   firstDelayMs={2600}
-                  deltaMin={1}
+                  deltaMin={-2}
                   deltaMax={2}
+                  min={0}
                   max={100}
                   formatValue={fmtPct}
                   formatBump={bumpPct}
@@ -474,13 +485,15 @@ export function VehicleDetailsOverlay({
                   icon={Route}
                   iconTint="bg-sky-50 text-sky-600"
                   bumpClass="bg-sky-500"
+                  bumpDownClass="bg-sky-700"
                   base={ops.odometerKm}
                   active={open}
                   reduce={reduce}
                   intervalMs={5000}
                   firstDelayMs={2400}
-                  deltaMin={1}
+                  deltaMin={-3}
                   deltaMax={5}
+                  min={0}
                   formatValue={fmtKm}
                   formatBump={bumpKm}
                 />
@@ -489,13 +502,15 @@ export function VehicleDetailsOverlay({
                   icon={IndianRupee}
                   iconTint="bg-amber-50 text-amber-700"
                   bumpClass="bg-amber-500"
+                  bumpDownClass="bg-amber-700"
                   base={ops.totalSpend}
                   active={open}
                   reduce={reduce}
                   intervalMs={4800}
                   firstDelayMs={2200}
-                  deltaMin={80}
+                  deltaMin={-220}
                   deltaMax={450}
+                  min={0}
                   formatValue={formatInr}
                   formatBump={bumpInr}
                 />
@@ -504,13 +519,15 @@ export function VehicleDetailsOverlay({
                   icon={Navigation}
                   iconTint="bg-emerald-50 text-emerald-600"
                   bumpClass="bg-emerald-500"
+                  bumpDownClass="bg-emerald-700"
                   base={ops.tripsToday}
                   active={open}
                   reduce={reduce}
                   intervalMs={5600}
                   firstDelayMs={3000}
-                  deltaMin={1}
+                  deltaMin={-1}
                   deltaMax={1}
+                  min={0}
                   formatValue={fmtTrips}
                   formatBump={bumpTrips}
                 />
