@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "@/lib/api";
@@ -20,6 +20,7 @@ function VehiclesPageInner() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<VehicleCardModel | null>(null);
   const [newOpen, setNewOpen] = useState(false);
+  const listRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -64,6 +65,13 @@ function VehiclesPageInner() {
       });
   }, [rows, status, search]);
 
+  const changeStatus = (next: string) => {
+    setStatus(next);
+    // Always restart fleet list from top-left when filter changes.
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    listRef.current?.scrollTo({ top: 0, left: 0 });
+  };
+
   return (
     <div className="space-y-6">
       <PageHero
@@ -84,7 +92,7 @@ function VehiclesPageInner() {
             key={s}
             size="sm"
             variant={status === s ? "primary" : "secondary"}
-            onClick={() => setStatus(s)}
+            onClick={() => changeStatus(s)}
           >
             {s === "all" ? "All" : s}
           </Button>
@@ -100,15 +108,16 @@ function VehiclesPageInner() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        <AnimatePresence>
+      <div ref={listRef} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <AnimatePresence mode="popLayout" initial={false}>
           {filtered.map((vehicle, idx) => (
             <motion.div
-              key={vehicle.id}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ delay: idx * 0.04 }}
+              key={`${status}-${vehicle.id}`}
+              layout
+              initial={{ opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ delay: Math.min(idx * 0.04, 0.2) }}
             >
               <VehicleCard
                 vehicle={vehicle}
