@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { motion } from "framer-motion";
 import { AlertCircle, ChevronRight, Fuel, HeartPulse } from "lucide-react";
 import { Badge } from "@/components/common/Badge";
@@ -9,18 +8,30 @@ export type VehicleCardModel = {
   id: string;
   vehicleNumber: string;
   status: string;
+  vehicleType?: string | null;
   make?: string | null;
   model?: string | null;
+  year?: number | null;
+  vin?: string | null;
   licensePlate?: string | null;
+  capacityWeightKg?: number | null;
+  capacityVolumeM3?: number | null;
   currentLatitude?: string | null;
   currentLongitude?: string | null;
   currentDriverName?: string | null;
+  lastLocationUpdate?: string | null;
   healthScore?: number;
   fuelLevel?: number;
   maintenanceDue?: boolean;
 };
 
-export function VehicleCard({ vehicle }: { vehicle: VehicleCardModel }) {
+export function VehicleCard({
+  vehicle,
+  onViewDetails,
+}: {
+  vehicle: VehicleCardModel;
+  onViewDetails?: (vehicle: VehicleCardModel) => void;
+}) {
   const health = vehicle.healthScore ?? 86;
   const fuel = vehicle.fuelLevel ?? 62;
   const status = vehicle.status.toLowerCase();
@@ -43,12 +54,16 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleCardModel }) {
   const driverLine = `Current driver - ${driverName}`;
 
   return (
-    <Link href={`/dashboard/vehicles?focus=${vehicle.id}`}>
+    <button
+      type="button"
+      onClick={() => onViewDetails?.(vehicle)}
+      className="w-full text-left"
+    >
       <motion.div
         whileHover={{ y: -6, scale: 1.015 }}
         whileTap={{ scale: 0.99 }}
         transition={{ type: "spring", stiffness: 360, damping: 22 }}
-        className="bg-white border border-sky-200 rounded-2xl p-6 shadow-card hover:shadow-soft relative overflow-hidden group"
+        className="bg-white border border-sky-200 rounded-2xl p-6 shadow-card hover:shadow-soft relative overflow-hidden group cursor-pointer"
       >
         <span className={`absolute top-0 left-0 right-0 h-1 ${accentBar}`} />
         <span
@@ -138,6 +153,6 @@ export function VehicleCard({ vehicle }: { vehicle: VehicleCardModel }) {
           </div>
         </div>
       </motion.div>
-    </Link>
+    </button>
   );
 }

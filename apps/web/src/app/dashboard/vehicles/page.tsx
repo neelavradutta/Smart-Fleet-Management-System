@@ -1,16 +1,24 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { api } from "@/lib/api";
-import { VehicleCard, type VehicleCardModel } from "@/components/vehicles/VehicleCard";
+import {
+  VehicleCard,
+  type VehicleCardModel,
+} from "@/components/vehicles/VehicleCard";
+import { VehicleDetailsOverlay } from "@/components/vehicles/VehicleDetailsOverlay";
 import { Button } from "@/components/common/Button";
 import { PageHero } from "@/components/common/PageHero";
 
-export default function VehiclesPage() {
+function VehiclesPageInner() {
   const [rows, setRows] = useState<VehicleCardModel[]>([]);
   const [status, setStatus] = useState("all");
   const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<VehicleCardModel | null>(null);
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   useEffect(() => {
     api<{ data: VehicleCardModel[] }>("/api/v1/vehicles")
@@ -25,6 +33,20 @@ export default function VehiclesPage() {
       )
       .catch(console.error);
   }, []);
+
+  useEffect(() => {
+    const focus = searchParams.get("focus");
+    if (!focus || !rows.length) return;
+    const hit = rows.find((v) => v.id === focus);
+    if (hit) setSelected(hit);
+  }, [searchParams, rows]);
+
+  const closeOverlay = useCallback(() => {
+    setSelected(null);
+    if (searchParams.get("focus")) {
+      router.replace("/dashboard/vehicles", { scroll: false });
+    }
+  }, [router, searchParams]);
 
   const filtered = useMemo(() => {
     return rows
@@ -76,11 +98,39 @@ export default function VehiclesPage() {
               exit={{ opacity: 0 }}
               transition={{ delay: idx * 0.04 }}
             >
-              <VehicleCard vehicle={vehicle} />
+              <VehicleCard
+                vehicle={vehicle}
+                onViewDetails={(v) => setSelected(v)}
+              />
             </motion.div>
           ))}
         </AnimatePresence>
       </div>
+
+      <VehicleDetailsOverlay
+        open={Boolean(selected)}
+        vehicle={selected}
+        onClose={closeOverlay}
+      />
     </div>
+  );
+}
+
+export default function VehiclesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="space-y-6">
+          <PageHero
+            theme="sun"
+            title="Fleet vehicles"
+            subtitle="Manage health, fuel, and maintenance across the fleet."
+          />
+          <p className="text-sm text-slate-500">Loading fleet…</p>
+        </div>
+      }
+    >
+      <VehiclesPageInner />
+    </Suspense>
   );
 }
