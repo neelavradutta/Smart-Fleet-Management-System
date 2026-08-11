@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
@@ -14,11 +14,13 @@ import {
   Gauge,
   GraduationCap,
   IdCard,
+  Trash2,
+  Upload,
   User,
   X,
 } from "lucide-react";
 import type { LeaderDriver } from "@/components/drivers/DriverLeaderboard";
-import { missingMetric } from "@/lib/driverMetrics";
+import { missingMetric, patchDriver } from "@/lib/driverMetrics";
 
 export const DRIVER_STATUS: Record<
   string,
@@ -174,11 +176,11 @@ const DEMO_PACKS: Record<string, Partial<DriverDetails>> = {
     insuranceClaims: "1 settled",
     lastIncidentDate: "19 Nov 2024",
     incidentSeverity: "Low",
-    licenseDocument: "On file",
-    idProof: "Aadhaar · On file",
-    employmentDocuments: "On file",
-    trainingCertificates: "On file",
-    medicalCertificate: "On file",
+    licenseDocument: "None",
+    idProof: "None",
+    employmentDocuments: "None",
+    trainingCertificates: "None",
+    medicalCertificate: "None",
     otherDocuments: "None",
     documentVerification: "Verified",
   },
@@ -244,11 +246,11 @@ const DEMO_PACKS: Record<string, Partial<DriverDetails>> = {
     insuranceClaims: "None",
     lastIncidentDate: "—",
     incidentSeverity: "—",
-    licenseDocument: "On file",
-    idProof: "Aadhaar · On file",
-    employmentDocuments: "On file",
-    trainingCertificates: "On file",
-    medicalCertificate: "On file",
+    licenseDocument: "None",
+    idProof: "None",
+    employmentDocuments: "None",
+    trainingCertificates: "None",
+    medicalCertificate: "None",
     otherDocuments: "None",
     documentVerification: "Verified",
   },
@@ -314,12 +316,12 @@ const DEMO_PACKS: Record<string, Partial<DriverDetails>> = {
     insuranceClaims: "1 open",
     lastIncidentDate: "03 Dec 2025",
     incidentSeverity: "Medium",
-    licenseDocument: "On file",
-    idProof: "Aadhaar · On file",
-    employmentDocuments: "On file",
-    trainingCertificates: "Partial",
-    medicalCertificate: "Restricted · On file",
-    otherDocuments: "Fitness note",
+    licenseDocument: "None",
+    idProof: "None",
+    employmentDocuments: "None",
+    trainingCertificates: "None",
+    medicalCertificate: "None",
+    otherDocuments: "None",
     documentVerification: "Verified",
   },
   "33333333-3333-3333-3333-333333333334": {
@@ -386,13 +388,13 @@ const DEMO_PACKS: Record<string, Partial<DriverDetails>> = {
     insuranceClaims: "3 (2 settled, 1 denied)",
     lastIncidentDate: "02 May 2026",
     incidentSeverity: "High",
-    licenseDocument: "Archived",
-    idProof: "Aadhaar · Archived",
-    employmentDocuments: "Archived",
-    trainingCertificates: "Archived",
-    medicalCertificate: "Expired",
-    otherDocuments: "Exit clearance",
-    documentVerification: "Archived",
+    licenseDocument: "None",
+    idProof: "None",
+    employmentDocuments: "None",
+    trainingCertificates: "None",
+    medicalCertificate: "None",
+    otherDocuments: "None",
+    documentVerification: "None",
   },
 };
 
@@ -422,8 +424,6 @@ const panelVariants = {
       type: "spring" as const,
       stiffness: 280,
       damping: 26,
-      staggerChildren: 0.055,
-      delayChildren: 0.08,
     },
   },
   exit: {
@@ -431,15 +431,6 @@ const panelVariants = {
     y: 28,
     scale: 0.96,
     transition: { duration: 0.2, ease: [0.4, 0, 1, 1] as const },
-  },
-};
-
-const child = {
-  hidden: { opacity: 0, y: 16 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { type: "spring" as const, stiffness: 320, damping: 24 },
   },
 };
 
@@ -457,7 +448,7 @@ function OverlaySection({
   const [open, setOpen] = useState(true);
 
   return (
-    <motion.section variants={child}>
+    <section>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -490,7 +481,7 @@ function OverlaySection({
           </motion.div>
         ) : null}
       </AnimatePresence>
-    </motion.section>
+    </section>
   );
 }
 
@@ -539,6 +530,432 @@ function formatAddress(value?: string | null) {
 }
 
 const photoMemory = new Map<string, string>();
+
+type DocSlotKey =
+  | "licenseDocument"
+  | "idProof"
+  | "employmentDocuments"
+  | "trainingCertificates"
+  | "medicalCertificate"
+  | "otherDocuments";
+
+const DOC_SLOTS: Array<{ key: DocSlotKey; label: string }> = [
+  { key: "licenseDocument", label: "License Document" },
+  { key: "idProof", label: "ID Proof" },
+  { key: "employmentDocuments", label: "Employment Documents" },
+  { key: "trainingCertificates", label: "Training Certificates" },
+  { key: "medicalCertificate", label: "Medical Certificate" },
+  { key: "otherDocuments", label: "Other Documents" },
+];
+
+type DocFile = { fileName: string; fileUrl: string; mime: string };
+
+const docMemory = new Map<string, DocFile>();
+
+function docMemKey(driverId: string, key: string) {
+  return `${driverId}:${key}`;
+}
+
+function DocFilePreview({
+  label,
+  file,
+}: {
+  label: string;
+  file: DocFile;
+}) {
+  if (file.mime.startsWith("image/")) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={file.fileUrl}
+        alt={label}
+        className="w-full rounded-xl border border-slate-200 object-contain max-h-[56vh]"
+      />
+    );
+  }
+  if (file.mime === "application/pdf") {
+    return (
+      <iframe
+        title={label}
+        src={file.fileUrl}
+        className="w-full h-[56vh] rounded-xl border border-slate-200"
+      />
+    );
+  }
+  return (
+    <a
+      href={file.fileUrl}
+      target="_blank"
+      rel="noreferrer"
+      className="inline-flex text-sm font-medium text-emerald-700 hover:underline"
+    >
+      Open {file.fileName}
+    </a>
+  );
+}
+
+function DocUploadLayer({
+  job,
+  onDismiss,
+  onRemove,
+}: {
+  job: {
+    label: string;
+    fileName: string;
+    progress: number;
+    phase: "uploading" | "failed" | "preview";
+    file?: DocFile;
+  };
+  onDismiss: () => void;
+  onRemove: () => void;
+}) {
+  useEffect(() => {
+    if (job.phase === "failed") {
+      const t = window.setTimeout(onDismiss, 1300);
+      return () => window.clearTimeout(t);
+    }
+  }, [job.phase, onDismiss]);
+
+  return createPortal(
+    <div className="fixed inset-0 z-[230] flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-slate-900/50"
+        aria-hidden
+        onClick={job.phase === "preview" ? onDismiss : undefined}
+      />
+      <div className="relative z-10 w-full max-w-md overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-xl">
+        {job.phase === "preview" && job.file ? (
+          <>
+            <div className="flex items-start justify-between gap-3 px-4 py-3 border-b border-slate-100">
+              <div className="min-w-0">
+                <p className="font-display text-sm font-semibold text-slate-900 truncate">
+                  {job.label}
+                </p>
+                <p className="text-xs text-emerald-700 truncate">Uploaded · {job.fileName}</p>
+              </div>
+              <div className="flex shrink-0 items-center gap-1">
+                <button
+                  type="button"
+                  onClick={onRemove}
+                  aria-label={`Remove ${job.label}`}
+                  className="grid h-8 w-8 place-items-center rounded-full text-rose-600 hover:bg-rose-50"
+                >
+                  <Trash2 size={15} />
+                </button>
+                <button
+                  type="button"
+                  onClick={onDismiss}
+                  aria-label="Back to driver details"
+                  className="grid h-8 w-8 place-items-center rounded-full text-slate-500 hover:bg-slate-100"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+            <div className="p-4">
+              <DocFilePreview label={job.label} file={job.file} />
+            </div>
+          </>
+        ) : (
+          <div className="px-6 py-7">
+            <p
+              className={
+                job.phase === "failed"
+                  ? "font-display text-xl font-semibold text-rose-600"
+                  : "font-display text-xl font-semibold text-slate-900"
+              }
+            >
+              {job.phase === "failed" ? "Failed" : "Uploading…"}
+            </p>
+            <p className="mt-1.5 text-sm text-slate-500 truncate">
+              {job.label} · {job.fileName}
+            </p>
+            <div className="mt-5 h-3 overflow-hidden rounded-full bg-slate-100">
+              <div
+                className={
+                  job.phase === "failed" ? "h-full bg-rose-500" : "h-full bg-emerald-500"
+                }
+                style={{
+                  width: `${Math.max(job.progress, job.phase === "uploading" ? 6 : 0)}%`,
+                  transition: "width 160ms linear",
+                }}
+              />
+            </div>
+            <p
+              className={
+                job.phase === "failed"
+                  ? "mt-3 text-sm font-medium text-rose-600"
+                  : "mt-3 text-sm font-medium text-slate-600"
+              }
+            >
+              {job.phase === "failed" ? "Failed" : `${job.progress}%`}
+            </p>
+          </div>
+        )}
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+function ViewEyeIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden
+    >
+      <path
+        d="M2.4 12s3.7-6.6 9.6-6.6S21.6 12 21.6 12s-3.7 6.6-9.6 6.6S2.4 12 2.4 12Z"
+        stroke="currentColor"
+        strokeWidth="1.9"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="12" r="2.35" fill="none" stroke="currentColor" strokeWidth="1.7" />
+      <circle cx="12" cy="12" r="1.15" fill="currentColor" />
+    </svg>
+  );
+}
+
+function DocumentsPanel({ driver }: { driver: DriverDetails }) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const pendingSlot = useRef<(typeof DOC_SLOTS)[number] | null>(null);
+  const [rev, setRev] = useState(0);
+  const [preview, setPreview] = useState<{
+    key: DocSlotKey;
+    label: string;
+    status: string;
+    file?: DocFile;
+  } | null>(null);
+  const [job, setJob] = useState<{
+    key: DocSlotKey;
+    label: string;
+    fileName: string;
+    progress: number;
+    phase: "uploading" | "failed" | "preview";
+    file?: DocFile;
+  } | null>(null);
+  void rev;
+  const dismissJob = useCallback(() => setJob(null), []);
+
+  async function runUpload(slot: (typeof DOC_SLOTS)[number], file: File) {
+    setPreview(null);
+    setJob({
+      key: slot.key,
+      label: slot.label,
+      fileName: file.name,
+      progress: 0,
+      phase: "uploading",
+    });
+    let p = 0;
+    const tick = window.setInterval(() => {
+      p = Math.min(p + 3 + Math.random() * 4, 90);
+      setJob((j) =>
+        j && j.phase === "uploading" ? { ...j, progress: Math.round(p) } : j,
+      );
+    }, 80);
+    try {
+      if (file.size <= 0) throw new Error("empty");
+      await Promise.all([
+        patchDriver(driver.id, {
+          source: "manual",
+          [slot.key]: "Uploaded",
+        }),
+        new Promise((resolve) => window.setTimeout(resolve, 1500)),
+      ]);
+      const prev = docMemory.get(docMemKey(driver.id, slot.key));
+      if (prev?.fileUrl.startsWith("blob:")) URL.revokeObjectURL(prev.fileUrl);
+      const stored: DocFile = {
+        fileName: file.name,
+        fileUrl: URL.createObjectURL(file),
+        mime: file.type || "application/octet-stream",
+      };
+      docMemory.set(docMemKey(driver.id, slot.key), stored);
+      setRev((n) => n + 1);
+      clearInterval(tick);
+      setJob((j) =>
+        j
+          ? { ...j, progress: 100, phase: "preview", file: stored }
+          : j,
+      );
+    } catch {
+      clearInterval(tick);
+      setJob((j) => (j ? { ...j, phase: "failed", progress: 100 } : j));
+    }
+  }
+
+  return (
+    <>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*,.pdf,.doc,.docx"
+        className="sr-only"
+        tabIndex={-1}
+        onChange={(e) => {
+          const picked = e.target.files?.[0];
+          const slot = pendingSlot.current;
+          e.target.value = "";
+          pendingSlot.current = null;
+          if (!picked || !slot) return;
+          void runUpload(slot, picked);
+        }}
+      />
+      <div className="grid sm:grid-cols-2 gap-x-6 gap-y-3 rounded-2xl border border-slate-200 bg-white p-4">
+        {DOC_SLOTS.map((slot) => {
+          const file = docMemory.get(docMemKey(driver.id, slot.key));
+          const status =
+            file || driver[slot.key] === "Uploaded" ? "Uploaded" : "None";
+          return (
+            <div key={slot.key} className="flex items-center justify-between gap-3 text-sm">
+              <span className="text-slate-500 shrink-0">{slot.label}</span>
+              <span className="flex min-w-0 items-center justify-end gap-1.5">
+                <span className="font-medium text-slate-900 truncate">{status}</span>
+                <button
+                  type="button"
+                  aria-label={`View ${slot.label}`}
+                  onClick={() =>
+                    setPreview({
+                      key: slot.key,
+                      label: slot.label,
+                      status,
+                      file,
+                    })
+                  }
+                  className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-sky-600 hover:bg-sky-50 hover:text-sky-700"
+                >
+                  <ViewEyeIcon />
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Update ${slot.label}`}
+                  disabled={Boolean(job)}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    pendingSlot.current = slot;
+                    fileInputRef.current?.click();
+                  }}
+                  className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-emerald-700 hover:bg-emerald-50 disabled:opacity-40"
+                >
+                  <Upload size={14} />
+                </button>
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      {job ? (
+        <DocUploadLayer
+          job={job}
+          onDismiss={dismissJob}
+          onRemove={() => {
+            const mem = docMemory.get(docMemKey(driver.id, job.key));
+            if (mem?.fileUrl.startsWith("blob:")) URL.revokeObjectURL(mem.fileUrl);
+            docMemory.delete(docMemKey(driver.id, job.key));
+            setRev((n) => n + 1);
+            void patchDriver(driver.id, {
+              source: "manual",
+              [job.key]: "None",
+            });
+            dismissJob();
+          }}
+        />
+      ) : null}
+
+      <AnimatePresence>
+        {preview ? (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[220] flex items-center justify-center p-4"
+          >
+            <button
+              type="button"
+              aria-label="Close document preview"
+              className="absolute inset-0 bg-slate-900/50"
+              onClick={() => setPreview(null)}
+            />
+            <motion.div
+              initial={{ y: 16, scale: 0.97 }}
+              animate={{ y: 0, scale: 1 }}
+              exit={{ y: 12, scale: 0.98 }}
+              className="relative z-10 w-full max-w-lg max-h-[84vh] overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-xl"
+            >
+              <div className="flex items-start justify-between gap-3 px-4 py-3 border-b border-slate-100">
+                <div className="min-w-0">
+                  <p className="font-display text-sm font-semibold text-slate-900 truncate">
+                    {preview.label}
+                  </p>
+                  <p className="text-xs text-slate-500 truncate">
+                    {preview.file?.fileName ?? preview.status}
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-1">
+                  <button
+                    type="button"
+                    aria-label={`Remove ${preview.label}`}
+                    onClick={() => {
+                      const mem = docMemory.get(docMemKey(driver.id, preview.key));
+                      if (mem?.fileUrl.startsWith("blob:")) {
+                        URL.revokeObjectURL(mem.fileUrl);
+                      }
+                      docMemory.delete(docMemKey(driver.id, preview.key));
+                      setRev((n) => n + 1);
+                      void patchDriver(driver.id, {
+                        source: "manual",
+                        [preview.key]: "None",
+                      });
+                      setPreview(null);
+                    }}
+                    className="grid h-8 w-8 place-items-center rounded-full text-rose-600 hover:bg-rose-50"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPreview(null)}
+                    aria-label="Close"
+                    className="grid h-8 w-8 place-items-center rounded-full text-slate-500 hover:bg-slate-100"
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              </div>
+              <div className="p-4 overflow-y-auto max-h-[calc(84vh-4rem)]">
+                {preview.file ? (
+                  <DocFilePreview label={preview.label} file={preview.file} />
+                ) : (
+                  <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 px-5 py-8 text-center">
+                    <p className="font-display text-lg font-semibold text-slate-900">
+                      {preview.label}
+                    </p>
+                    <p className="mt-2 text-sm text-slate-700">{driver.fullName}</p>
+                    <p className="text-xs text-slate-500">
+                      {dash(driver.driverCode)} · {dash(driver.employeeId)}
+                    </p>
+                    <p className="mt-4 text-sm font-medium text-slate-800">
+                      {preview.status}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {preview.status === "Uploaded"
+                        ? "Uploaded. Use the trash to remove."
+                        : "None — nothing uploaded yet."}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+    </>
+  );
+}
 
 function DriverPhotoSlot({
   name,
@@ -603,9 +1020,19 @@ export function DriverDetailsOverlay({
 }) {
   const [mounted, setMounted] = useState(false);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [settled, setSettled] = useState(false);
   const reduce = useReducedMotion();
 
   useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    if (!open) {
+      setSettled(false);
+      return;
+    }
+    const id = window.setTimeout(() => setSettled(true), 400);
+    return () => window.clearTimeout(id);
+  }, [open]);
 
   useEffect(() => {
     if (!driver) {
@@ -629,7 +1056,6 @@ export function DriverDetailsOverlay({
   if (!mounted) return null;
 
   const d = driver;
-  const meta = d ? DRIVER_STATUS[d.status] ?? { label: d.status, tone: "neutral" as const } : null;
 
   return createPortal(
     <AnimatePresence>
@@ -640,7 +1066,9 @@ export function DriverDetailsOverlay({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="absolute inset-0 bg-slate-900/45 backdrop-blur-[2px]"
-            onClick={onClose}
+            onMouseDown={(e) => {
+              if (e.target === e.currentTarget) onClose();
+            }}
             aria-hidden
           />
 
@@ -649,17 +1077,15 @@ export function DriverDetailsOverlay({
             aria-modal="true"
             aria-labelledby="driver-detail-title"
             variants={reduce ? undefined : panelVariants}
-            initial={reduce ? false : "hidden"}
+            initial={settled || reduce ? false : "hidden"}
             animate="visible"
             exit="exit"
+            onMouseDown={(e) => e.stopPropagation()}
             className="relative z-10 w-full max-w-3xl max-h-[92vh] overflow-hidden rounded-t-[28px] sm:rounded-[28px] bg-white border border-slate-200 shadow-[0_28px_90px_-24px_rgba(15,23,42,0.4)]"
           >
             <div className="relative bg-emerald-600 px-5 sm:px-7 pt-5 pb-6">
               <div className="relative flex items-start justify-between gap-4">
-                <motion.div
-                  variants={child}
-                  className="min-w-0 flex items-center gap-3"
-                >
+                <div className="min-w-0 flex items-center gap-3">
                   <DriverPhotoSlot
                     name={d.fullName}
                     photoUrl={photoUrl}
@@ -679,18 +1105,15 @@ export function DriverDetailsOverlay({
                       {dash(d.employeeId)} · {dash(d.department)}
                     </p>
                   </div>
-                </motion.div>
-                <motion.button
-                  variants={child}
+                </div>
+                <button
                   type="button"
-                  whileHover={{ rotate: 90, scale: 1.08 }}
-                  whileTap={{ scale: 0.92 }}
                   onClick={onClose}
                   aria-label="Close driver details"
                   className="shrink-0 grid place-items-center h-10 w-10 rounded-full bg-white/20 text-white hover:bg-white/30"
                 >
                   <X size={18} />
-                </motion.button>
+                </button>
               </div>
             </div>
 
@@ -748,7 +1171,6 @@ export function DriverDetailsOverlay({
                     ["Assigned Branch", dash(d.assignedBranch)],
                     ["Supervisor / Manager", dash(d.supervisor)],
                     ["Shift", dash(d.shift)],
-                    ["Current Status", meta?.label ?? d.status],
                     ["Reason for Leaving", dash(d.reasonForLeaving)],
                     ["Leaving Date", dash(d.leavingDate)],
                   ]}
@@ -858,20 +1280,7 @@ export function DriverDetailsOverlay({
                 icon={FolderOpen}
                 iconClass="text-teal-600"
               >
-                <FieldGrid
-                  rows={[
-                    ["License Document", dash(d.licenseDocument)],
-                    ["ID Proof", dash(d.idProof)],
-                    ["Employment Documents", dash(d.employmentDocuments)],
-                    ["Training Certificates", dash(d.trainingCertificates)],
-                    ["Medical Certificate", dash(d.medicalCertificate)],
-                    ["Other Documents", dash(d.otherDocuments)],
-                    [
-                      "Document Verification Status",
-                      dash(d.documentVerification),
-                    ],
-                  ]}
-                />
+                <DocumentsPanel driver={d} />
               </OverlaySection>
             </div>
           </motion.div>
