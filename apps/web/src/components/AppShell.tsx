@@ -203,12 +203,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   );
 
   const isMapPage = pathname === "/dashboard/map";
+  const fillViewport =
+    isMapPage || pathname === "/dashboard/drivers";
 
   return (
     <div
       className={cn(
         "sf-shell lg:grid lg:grid-cols-[280px_1fr]",
-        isMapPage && "h-dvh max-h-dvh overflow-hidden",
+        fillViewport && "h-dvh max-h-dvh overflow-hidden",
       )}
     >
       <Toaster position="top-right" />
@@ -276,12 +278,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <main
         className={cn(
           "min-w-0 p-4 sm:p-6 lg:p-8 pt-5",
-          isMapPage &&
+          fillViewport &&
             "flex min-h-0 flex-col overflow-hidden h-[calc(100dvh-3.5rem)] lg:h-full lg:max-h-full",
         )}
       >
         <PageTransition
-          className={isMapPage ? "flex min-h-0 flex-1 flex-col" : undefined}
+          className={fillViewport ? "flex min-h-0 flex-1 flex-col" : undefined}
         >
           {children}
         </PageTransition>

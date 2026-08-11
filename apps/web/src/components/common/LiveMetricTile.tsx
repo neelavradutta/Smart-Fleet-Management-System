@@ -97,10 +97,10 @@ export function LiveMetricTile({
   const down = (bump?.delta ?? 0) < 0;
 
   return (
-    <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
+    <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-center">
       <div
         className={cn(
-          "mb-2 grid h-8 w-8 place-items-center rounded-xl",
+          "mx-auto mb-2 grid h-8 w-8 place-items-center rounded-xl",
           iconTint,
         )}
       >

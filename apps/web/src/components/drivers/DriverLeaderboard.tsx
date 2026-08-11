@@ -23,26 +23,26 @@ export function DriverLeaderboard({ drivers }: { drivers: LeaderDriver[] }) {
   );
 
   return (
-    <Card accent="sun">
-      <h2 className="font-display text-xl font-semibold text-slate-900 mb-4">
-        Safety Leaderboard
+    <Card accent="sun" className="h-full flex flex-col overflow-hidden">
+      <h2 className="font-display text-xl font-semibold text-slate-900 mb-3 shrink-0">
+        Leaderboard
       </h2>
-      <div className="space-y-3">
-        {sorted.slice(0, 8).map((driver, idx) => (
+      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain sf-hide-scrollbar">
+        {sorted.map((driver, idx) => (
           <motion.div
             key={driver.id}
             initial={{ opacity: 0, x: -16 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: idx * 0.06, type: "spring", stiffness: 320 }}
+            transition={{ delay: Math.min(idx, 6) * 0.06, type: "spring", stiffness: 320 }}
             whileHover={{ x: 4, scale: 1.01 }}
-            className={`flex items-center gap-4 p-4 rounded-xl border bg-gradient-to-r ${
+            className={`flex h-[calc((100%-1rem)/3)] min-h-[4.75rem] shrink-0 items-center gap-3 px-3 py-3 rounded-xl border bg-gradient-to-r ${
               idx < 3 ? rowTint[idx] : "from-white to-slate-50 border-slate-100"
             }`}
           >
-            <div className="w-8 flex justify-center">
+            <div className="w-7 flex justify-center shrink-0">
               {idx < 3 ? (
                 <Medal
-                  size={22}
+                  size={20}
                   className={
                     idx === 0
                       ? "text-amber-500"
@@ -59,18 +59,18 @@ export function DriverLeaderboard({ drivers }: { drivers: LeaderDriver[] }) {
               <p className="font-semibold text-slate-900 truncate">
                 {driver.fullName}
               </p>
-              <p className="text-sm text-slate-500">
+              <p className="text-xs text-slate-500">
                 {driver.totalMiles ?? 0} miles logged
               </p>
             </div>
-            <div className="text-right">
-              <p className="font-display text-2xl font-bold text-slate-900">
+            <div className="text-right shrink-0">
+              <p className="font-display text-xl font-bold text-slate-900 leading-none">
                 {Number(driver.safetyScore).toFixed(0)}
               </p>
-              <p className="text-xs text-slate-500">/100</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">/100</p>
             </div>
             {Number(driver.safetyScore) > 90 ? (
-              <TrendingUp className="text-emerald-500" size={18} />
+              <TrendingUp className="text-emerald-500 shrink-0" size={16} />
             ) : null}
           </motion.div>
         ))}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useReducedMotion } from "framer-motion";
 import { Gauge, Navigation, Route, Search, Users } from "lucide-react";
 import { api } from "@/lib/api";
@@ -34,80 +34,11 @@ const DRIVER_STATUS: Record<
 export default function DriversPage() {
   const [rows, setRows] = useState<Driver[]>([]);
   const [search, setSearch] = useState("");
-  const boxRef = useRef<HTMLDivElement>(null);
-  const scrollerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     api<{ data: Driver[] }>("/api/v1/drivers")
       .then((res) => setRows(res.data))
       .catch(console.error);
-  }, []);
-
-  useEffect(() => {
-    const box = boxRef.current;
-    const scroller = scrollerRef.current;
-    if (!box || !scroller) return;
-
-    const lockPageSwipe = () => {
-      document.documentElement.style.overscrollBehaviorX = "none";
-      document.body.style.overscrollBehaviorX = "none";
-    };
-    const unlockPageSwipe = () => {
-      document.documentElement.style.overscrollBehaviorX = "";
-      document.body.style.overscrollBehaviorX = "";
-    };
-
-    const onWheel = (e: WheelEvent) => {
-      const dx = e.shiftKey ? e.deltaY + e.deltaX : e.deltaX;
-      if (dx === 0) return;
-      e.preventDefault();
-      e.stopPropagation();
-      scroller.scrollLeft += dx;
-    };
-
-    let dragging = false;
-    let lastX = 0;
-    const onPointerDown = (e: PointerEvent) => {
-      if ((e.target as HTMLElement).closest("input, textarea, button, a")) {
-        return;
-      }
-      dragging = true;
-      lastX = e.clientX;
-      box.setPointerCapture(e.pointerId);
-    };
-    const onPointerMove = (e: PointerEvent) => {
-      if (!dragging) return;
-      const delta = lastX - e.clientX;
-      lastX = e.clientX;
-      if (delta === 0) return;
-      e.preventDefault();
-      scroller.scrollLeft += delta;
-    };
-    const onPointerUp = (e: PointerEvent) => {
-      dragging = false;
-      if (box.hasPointerCapture(e.pointerId)) {
-        box.releasePointerCapture(e.pointerId);
-      }
-    };
-
-    box.addEventListener("mouseenter", lockPageSwipe);
-    box.addEventListener("mouseleave", unlockPageSwipe);
-    box.addEventListener("wheel", onWheel, { passive: false });
-    box.addEventListener("pointerdown", onPointerDown);
-    box.addEventListener("pointermove", onPointerMove);
-    box.addEventListener("pointerup", onPointerUp);
-    box.addEventListener("pointercancel", onPointerUp);
-
-    return () => {
-      unlockPageSwipe();
-      box.removeEventListener("mouseenter", lockPageSwipe);
-      box.removeEventListener("mouseleave", unlockPageSwipe);
-      box.removeEventListener("wheel", onWheel);
-      box.removeEventListener("pointerdown", onPointerDown);
-      box.removeEventListener("pointermove", onPointerMove);
-      box.removeEventListener("pointerup", onPointerUp);
-      box.removeEventListener("pointercancel", onPointerUp);
-    };
   }, []);
 
   const filtered = useMemo(() => {
@@ -140,14 +71,14 @@ export default function DriversPage() {
   }, [rows]);
 
   return (
-    <div className="space-y-6">
+    <div className="flex min-h-0 flex-1 flex-col gap-3 [&>*]:!mb-0">
       <PageHero
         theme="lilac"
         title="Driver performance"
         subtitle="Safety scores, licenses, and behavior monitoring."
       />
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid shrink-0 grid-cols-2 sm:grid-cols-4 gap-3">
         <LiveMetricTile
           label="Total Drivers"
           icon={Users}
@@ -219,17 +150,13 @@ export default function DriversPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
-        <div className="xl:col-span-5">
-          <DriverLeaderboard drivers={rows} />
-        </div>
+      <div className="grid min-h-0 flex-1 grid-cols-1 xl:grid-cols-12 xl:grid-rows-[minmax(0,1fr)] gap-4 items-stretch overflow-hidden">
         <Card
           accent="lilac"
-          className="xl:col-span-7 min-w-0 overscroll-x-none"
+          className="xl:col-span-8 min-h-0 h-full min-w-0 flex flex-col overflow-hidden"
         >
-          <div ref={boxRef} className="min-w-0 overscroll-x-none">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <h2 className="font-display text-lg font-semibold text-slate-900">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3 shrink-0">
+            <h2 className="font-display text-xl font-semibold text-slate-900">
               Roster
             </h2>
             <label className="relative ml-auto inline-flex items-center">
@@ -248,49 +175,47 @@ export default function DriversPage() {
               />
             </label>
           </div>
-          <div
-            ref={scrollerRef}
-            className="overflow-x-auto overscroll-x-none sf-hide-scrollbar"
-          >
-            <table className="w-full min-w-[36rem] text-sm">
-              <thead>
-                <tr className="text-left text-slate-500 border-b border-slate-100">
-                  <th className="py-2 font-medium">Name</th>
-                  <th className="py-2 font-medium">License</th>
-                  <th className="py-2 font-medium">Safety</th>
-                  <th className="py-2 font-medium">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((d) => (
-                  <tr key={d.id} className="border-b border-slate-50">
-                    <td className="py-3">
-                      <p className="font-medium text-slate-900">{d.fullName}</p>
-                      <p className="text-xs text-slate-500">{d.email}</p>
-                    </td>
-                    <td className="py-3 text-slate-700">{d.licenseNumber}</td>
-                    <td className="py-3 font-semibold">
-                      {Number(d.safetyScore).toFixed(1)}
-                    </td>
-                    <td className="py-3">
-                      {(() => {
-                        const meta =
-                          DRIVER_STATUS[d.status] ?? {
-                            label: d.status,
-                            tone: "neutral" as const,
-                          };
-                        return (
-                          <Badge tone={meta.tone}>{meta.label}</Badge>
-                        );
-                      })()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="grid grid-cols-[1.4fr_1.1fr_0.55fr_0.9fr] gap-2 border-b border-slate-100 pb-2 text-sm text-slate-500 shrink-0">
+            <span className="font-medium">Name</span>
+            <span className="font-medium">License</span>
+            <span className="font-medium">Safety</span>
+            <span className="font-medium">Status</span>
           </div>
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain sf-hide-scrollbar">
+            {filtered.map((d) => {
+              const meta =
+                DRIVER_STATUS[d.status] ?? {
+                  label: d.status,
+                  tone: "neutral" as const,
+                };
+              return (
+                <div
+                  key={d.id}
+                  className="grid shrink-0 grid-cols-[1.4fr_1.1fr_0.55fr_0.9fr] items-center gap-2 py-3 border-b border-slate-50 last:border-0"
+                >
+                  <div className="min-w-0">
+                    <p className="font-medium text-slate-900 truncate">
+                      {d.fullName}
+                    </p>
+                    <p className="text-xs text-slate-500 truncate">{d.email}</p>
+                  </div>
+                  <p className="text-sm text-slate-700 truncate">
+                    {d.licenseNumber}
+                  </p>
+                  <p className="text-sm font-semibold">
+                    {Number(d.safetyScore).toFixed(1)}
+                  </p>
+                  <div>
+                    <Badge tone={meta.tone}>{meta.label}</Badge>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </Card>
+        <div className="xl:col-span-4 min-h-0 h-full overflow-hidden">
+          <DriverLeaderboard drivers={rows} />
+        </div>
       </div>
     </div>
   );
