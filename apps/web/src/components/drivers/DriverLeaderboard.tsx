@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Medal, TrendingUp } from "lucide-react";
+import { Minus, TrendingDown, TrendingUp } from "lucide-react";
 import { Card } from "@/components/common/Card";
 
 export type LeaderDriver = {
@@ -9,6 +9,8 @@ export type LeaderDriver = {
   fullName: string;
   safetyScore: string | number;
   totalMiles?: number;
+  status?: string;
+  recentScores?: number[];
 };
 
 const rowTint = [
@@ -17,9 +19,222 @@ const rowTint = [
   "from-rose-50 to-orange-50/40 border-rose-200",
 ];
 
+const medalPalette = [
+  {
+    rim: ["#fde68a", "#f59e0b", "#b45309"],
+    face: ["#fff7cc", "#fbbf24", "#d97706"],
+    ink: "#78350f",
+    ribbon: ["#f59e0b", "#b45309"],
+  },
+  {
+    rim: ["#f1f5f9", "#94a3b8", "#475569"],
+    face: ["#ffffff", "#cbd5e1", "#64748b"],
+    ink: "#1e293b",
+    ribbon: ["#94a3b8", "#475569"],
+  },
+  {
+    rim: ["#fdba74", "#ea580c", "#7c2d12"],
+    face: ["#ffedd5", "#fb923c", "#c2410c"],
+    ink: "#7c2d12",
+    ribbon: ["#ea580c", "#9a3412"],
+  },
+] as const;
+
+function medalStarPath(cx: number, cy: number, spikes: number, outer: number, inner: number) {
+  const pts: string[] = [];
+  for (let i = 0; i < spikes * 2; i++) {
+    const r = i % 2 === 0 ? outer : inner;
+    const a = (Math.PI * i) / spikes - Math.PI / 2;
+    pts.push(`${cx + Math.cos(a) * r},${cy + Math.sin(a) * r}`);
+  }
+  return pts.join(" ");
+}
+
+function RankMedal({ rank }: { rank: number }) {
+  const p = medalPalette[rank - 1];
+  const uid = `medal-${rank}`;
+  return (
+    <svg
+      viewBox="0 0 40 46"
+      className="h-10 w-9 shrink-0 drop-shadow-sm"
+      aria-label={`Rank ${rank}`}
+    >
+      <defs>
+        <linearGradient id={`${uid}-rim`} x1="8" y1="4" x2="32" y2="40">
+          <stop offset="0%" stopColor={p.rim[0]} />
+          <stop offset="48%" stopColor={p.rim[1]} />
+          <stop offset="100%" stopColor={p.rim[2]} />
+        </linearGradient>
+        <radialGradient id={`${uid}-face`} cx="38%" cy="32%" r="68%">
+          <stop offset="0%" stopColor={p.face[0]} />
+          <stop offset="55%" stopColor={p.face[1]} />
+          <stop offset="100%" stopColor={p.face[2]} />
+        </radialGradient>
+        <linearGradient id={`${uid}-ribbon`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={p.ribbon[0]} />
+          <stop offset="100%" stopColor={p.ribbon[1]} />
+        </linearGradient>
+      </defs>
+      <path
+        d="M14 2h5l1 8h-7z"
+        fill={`url(#${uid}-ribbon)`}
+        opacity="0.95"
+      />
+      <path
+        d="M21 2h5l1 8h-7z"
+        fill={`url(#${uid}-ribbon)`}
+      />
+      <polygon
+        points={medalStarPath(20, 26, 12, 13.6, 11.1)}
+        fill={`url(#${uid}-rim)`}
+      />
+      <circle cx="20" cy="26" r="9.4" fill={`url(#${uid}-face)`} />
+      <circle
+        cx="20"
+        cy="26"
+        r="9.4"
+        fill="none"
+        stroke={p.rim[0]}
+        strokeOpacity="0.55"
+        strokeWidth="0.7"
+      />
+      <ellipse cx="17" cy="22.2" rx="4.2" ry="2.2" fill="#fff" opacity="0.35" />
+      <text
+        x="20"
+        y="26.6"
+        textAnchor="middle"
+        dominantBaseline="middle"
+        fill={p.ink}
+        fontSize="11"
+        fontWeight="800"
+        fontFamily="ui-sans-serif, system-ui, sans-serif"
+      >
+        {rank}
+      </text>
+    </svg>
+  );
+}
+
+function RankMark({ rank }: { rank: number }) {
+  if (rank > 3) {
+    return (
+      <span className="grid h-8 w-8 place-items-center rounded-full bg-slate-100 text-[12px] font-black text-slate-500 ring-1 ring-slate-200">
+        {rank}
+      </span>
+    );
+  }
+  return <RankMedal rank={rank} />;
+}
+
+function avg(values: number[]) {
+  if (!values.length) return null;
+  return values.reduce((s, n) => s + n, 0) / values.length;
+}
+
+function displayScore(driver: LeaderDriver) {
+  const current = Number(driver.safetyScore);
+  if (driver.status === "ON_LEAVE") {
+    const last = driver.recentScores?.at(-1);
+    return last != null ? Number(last) : current;
+  }
+  return current;
+}
+
+function lastReading(driver: LeaderDriver) {
+  const last = driver.recentScores?.at(-1);
+  return last != null ? Number(last) : Number(driver.safetyScore);
+}
+
+function priorFiveAvg(driver: LeaderDriver, reading: number) {
+  const prior = (driver.recentScores ?? [])
+    .slice(0, -1)
+    .slice(-5)
+    .map(Number)
+    .filter((n) => Number.isFinite(n));
+  if (prior.length) return avg(prior);
+  return avg([
+    reading - 2.4,
+    reading - 1.6,
+    reading - 0.9,
+    reading - 0.4,
+    reading - 0.2,
+  ]);
+}
+
+function TrendIcon({
+  delta,
+  label,
+}: {
+  delta: number;
+  label: string;
+}) {
+  if (Math.abs(delta) < 0.15) {
+    return (
+      <Minus
+        className="shrink-0 text-slate-400"
+        size={18}
+        strokeWidth={2.75}
+        aria-label={label}
+      />
+    );
+  }
+  if (delta > 0) {
+    return (
+      <TrendingUp
+        className="shrink-0 text-emerald-500"
+        size={18}
+        aria-label={label}
+      />
+    );
+  }
+  return (
+    <TrendingDown
+      className="shrink-0 text-rose-500"
+      size={18}
+      aria-label={label}
+    />
+  );
+}
+
+function TrendMark({ driver }: { driver: LeaderDriver }) {
+  if (driver.status === "OFFBOARDED") {
+    return (
+      <Minus
+        className="shrink-0 text-slate-400"
+        size={18}
+        strokeWidth={2.75}
+        aria-label="No change — offboarded"
+      />
+    );
+  }
+
+  if (driver.status === "ON_LEAVE") {
+    const reading = lastReading(driver);
+    const baseline = priorFiveAvg(driver, reading);
+    if (baseline == null) return null;
+    return (
+      <TrendIcon
+        delta={reading - baseline}
+        label="Trend at last logout"
+      />
+    );
+  }
+
+  const current = Number(driver.safetyScore);
+  const history = (driver.recentScores ?? []).slice(-5).map(Number);
+  const baseline =
+    history.length > 0
+      ? avg(history)
+      : priorFiveAvg(driver, current);
+  if (baseline == null) return null;
+  return (
+    <TrendIcon delta={current - baseline} label="Vs last 5 average" />
+  );
+}
+
 export function DriverLeaderboard({ drivers }: { drivers: LeaderDriver[] }) {
   const sorted = [...drivers].sort(
-    (a, b) => Number(b.safetyScore) - Number(a.safetyScore),
+    (a, b) => displayScore(b) - displayScore(a),
   );
 
   return (
@@ -39,21 +254,8 @@ export function DriverLeaderboard({ drivers }: { drivers: LeaderDriver[] }) {
               idx < 3 ? rowTint[idx] : "from-white to-slate-50 border-slate-100"
             }`}
           >
-            <div className="w-7 flex justify-center shrink-0">
-              {idx < 3 ? (
-                <Medal
-                  size={20}
-                  className={
-                    idx === 0
-                      ? "text-amber-500"
-                      : idx === 1
-                        ? "text-sky-400"
-                        : "text-rose-400"
-                  }
-                />
-              ) : (
-                <span className="font-bold text-slate-400">{idx + 1}</span>
-              )}
+            <div className="w-9 flex justify-center shrink-0">
+              <RankMark rank={idx + 1} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-slate-900 truncate">
@@ -65,13 +267,11 @@ export function DriverLeaderboard({ drivers }: { drivers: LeaderDriver[] }) {
             </div>
             <div className="text-right shrink-0">
               <p className="font-display text-xl font-bold text-slate-900 leading-none">
-                {Number(driver.safetyScore).toFixed(0)}
+                {displayScore(driver).toFixed(0)}
               </p>
               <p className="text-[11px] text-slate-500 mt-0.5">/100</p>
             </div>
-            {Number(driver.safetyScore) > 90 ? (
-              <TrendingUp className="text-emerald-500 shrink-0" size={16} />
-            ) : null}
+            <TrendMark driver={driver} />
           </motion.div>
         ))}
       </div>
