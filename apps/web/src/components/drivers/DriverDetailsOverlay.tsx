@@ -5,14 +5,20 @@ import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 import {
+  AlertTriangle,
   Briefcase,
+  CalendarCheck,
   Camera,
   ChevronDown,
+  FolderOpen,
+  Gauge,
+  GraduationCap,
   IdCard,
   User,
   X,
 } from "lucide-react";
 import type { LeaderDriver } from "@/components/drivers/DriverLeaderboard";
+import { missingMetric } from "@/lib/driverMetrics";
 
 export const DRIVER_STATUS: Record<
   string,
@@ -55,6 +61,54 @@ export type DriverDetails = LeaderDriver & {
   reasonForLeaving?: string | null;
   leavingDate?: string | null;
   photoUrl?: string | null;
+  performanceRating?: string | null;
+  totalTrips?: string | null;
+  totalDrivingHours?: string | null;
+  avgTripDistance?: string | null;
+  avgSpeed?: string | null;
+  maxSpeed?: string | null;
+  hardBrakingEvents?: string | null;
+  harshAccelEvents?: string | null;
+  harshCorneringEvents?: string | null;
+  speedingEvents?: string | null;
+  overspeedingRate?: string | null;
+  accidentCount?: string | null;
+  nearMissCount?: string | null;
+  safetyViolations?: string | null;
+  trafficViolations?: string | null;
+  complaints?: string | null;
+  customerRating?: string | null;
+  currentAvailability?: string | null;
+  workingDays?: string | null;
+  daysWorked?: string | null;
+  daysAbsent?: string | null;
+  leaveDays?: string | null;
+  lateArrivals?: string | null;
+  overtimeHours?: string | null;
+  lastActiveDate?: string | null;
+  trainingCompleted?: string | null;
+  safetyTraining?: string | null;
+  defensiveDrivingTraining?: string | null;
+  lastTrainingDate?: string | null;
+  nextTrainingDue?: string | null;
+  certificationStatus?: string | null;
+  medicalFitnessStatus?: string | null;
+  complianceStatus?: string | null;
+  accidentHistory?: string | null;
+  violationHistory?: string | null;
+  warningCount?: string | null;
+  disciplinaryActions?: string | null;
+  incidentReports?: string | null;
+  insuranceClaims?: string | null;
+  lastIncidentDate?: string | null;
+  incidentSeverity?: string | null;
+  licenseDocument?: string | null;
+  idProof?: string | null;
+  employmentDocuments?: string | null;
+  trainingCertificates?: string | null;
+  medicalCertificate?: string | null;
+  otherDocuments?: string | null;
+  documentVerification?: string | null;
 };
 
 const DEMO_PACKS: Record<string, Partial<DriverDetails>> = {
@@ -79,6 +133,54 @@ const DEMO_PACKS: Record<string, Partial<DriverDetails>> = {
     assignedBranch: "Andheri Hub",
     supervisor: "Meera Joshi",
     shift: "Morning · 06:00–14:00",
+    performanceRating: "4.6 / 5",
+    totalTrips: "612",
+    totalDrivingHours: "418 h",
+    avgTripDistance: "20.3 mi",
+    avgSpeed: "29.8 mph",
+    maxSpeed: "64 mph",
+    hardBrakingEvents: "7",
+    harshAccelEvents: "4",
+    harshCorneringEvents: "3",
+    speedingEvents: "5",
+    overspeedingRate: "0.8%",
+    accidentCount: "1",
+    nearMissCount: "2",
+    safetyViolations: "1",
+    trafficViolations: "2",
+    complaints: "1",
+    customerRating: "4.5 / 5",
+    currentAvailability: "Available",
+    workingDays: "1,142",
+    daysWorked: "1,086",
+    daysAbsent: "18",
+    leaveDays: "38",
+    lateArrivals: "6",
+    overtimeHours: "124 h",
+    lastActiveDate: "12 Aug 2026",
+    trainingCompleted: "8 / 8",
+    safetyTraining: "Completed",
+    defensiveDrivingTraining: "Completed",
+    lastTrainingDate: "04 Mar 2026",
+    nextTrainingDue: "04 Mar 2027",
+    certificationStatus: "Valid",
+    medicalFitnessStatus: "Fit",
+    complianceStatus: "Compliant",
+    accidentHistory: "1 minor rear-end (2024)",
+    violationHistory: "2 traffic",
+    warningCount: "0",
+    disciplinaryActions: "None",
+    incidentReports: "2",
+    insuranceClaims: "1 settled",
+    lastIncidentDate: "19 Nov 2024",
+    incidentSeverity: "Low",
+    licenseDocument: "On file",
+    idProof: "Aadhaar · On file",
+    employmentDocuments: "On file",
+    trainingCertificates: "On file",
+    medicalCertificate: "On file",
+    otherDocuments: "None",
+    documentVerification: "Verified",
   },
   "33333333-3333-3333-3333-333333333332": {
     driverCode: "DRV-1002",
@@ -101,6 +203,54 @@ const DEMO_PACKS: Record<string, Partial<DriverDetails>> = {
     assignedBranch: "Bandra Depot",
     supervisor: "Meera Joshi",
     shift: "Evening · 14:00–22:00",
+    performanceRating: "4.9 / 5",
+    totalTrips: "488",
+    totalDrivingHours: "312 h",
+    avgTripDistance: "20.1 mi",
+    avgSpeed: "31.4 mph",
+    maxSpeed: "58 mph",
+    hardBrakingEvents: "1",
+    harshAccelEvents: "0",
+    harshCorneringEvents: "1",
+    speedingEvents: "0",
+    overspeedingRate: "0.1%",
+    accidentCount: "0",
+    nearMissCount: "0",
+    safetyViolations: "0",
+    trafficViolations: "0",
+    complaints: "0",
+    customerRating: "4.9 / 5",
+    currentAvailability: "Off Duty",
+    workingDays: "868",
+    daysWorked: "842",
+    daysAbsent: "8",
+    leaveDays: "18",
+    lateArrivals: "1",
+    overtimeHours: "46 h",
+    lastActiveDate: "11 Aug 2026",
+    trainingCompleted: "7 / 7",
+    safetyTraining: "Completed",
+    defensiveDrivingTraining: "Completed",
+    lastTrainingDate: "18 Jan 2026",
+    nextTrainingDue: "18 Jan 2027",
+    certificationStatus: "Valid",
+    medicalFitnessStatus: "Fit",
+    complianceStatus: "Compliant",
+    accidentHistory: "None",
+    violationHistory: "None",
+    warningCount: "0",
+    disciplinaryActions: "None",
+    incidentReports: "0",
+    insuranceClaims: "None",
+    lastIncidentDate: "—",
+    incidentSeverity: "—",
+    licenseDocument: "On file",
+    idProof: "Aadhaar · On file",
+    employmentDocuments: "On file",
+    trainingCertificates: "On file",
+    medicalCertificate: "On file",
+    otherDocuments: "None",
+    documentVerification: "Verified",
   },
   "33333333-3333-3333-3333-333333333333": {
     driverCode: "DRV-1003",
@@ -123,6 +273,54 @@ const DEMO_PACKS: Record<string, Partial<DriverDetails>> = {
     assignedBranch: "Pune Yard",
     supervisor: "Arjun Desai",
     shift: "Rotating",
+    performanceRating: "4.1 / 5",
+    totalTrips: "574",
+    totalDrivingHours: "502 h",
+    avgTripDistance: "26.5 mi",
+    avgSpeed: "30.3 mph",
+    maxSpeed: "72 mph",
+    hardBrakingEvents: "11",
+    harshAccelEvents: "8",
+    harshCorneringEvents: "6",
+    speedingEvents: "9",
+    overspeedingRate: "1.6%",
+    accidentCount: "2",
+    nearMissCount: "4",
+    safetyViolations: "3",
+    trafficViolations: "3",
+    complaints: "2",
+    customerRating: "4.0 / 5",
+    currentAvailability: "On Leave",
+    workingDays: "1,268",
+    daysWorked: "1,148",
+    daysAbsent: "22",
+    leaveDays: "98",
+    lateArrivals: "14",
+    overtimeHours: "88 h",
+    lastActiveDate: "28 Jul 2026",
+    trainingCompleted: "6 / 8",
+    safetyTraining: "Completed",
+    defensiveDrivingTraining: "Due",
+    lastTrainingDate: "12 Sep 2025",
+    nextTrainingDue: "12 Sep 2026",
+    certificationStatus: "Valid",
+    medicalFitnessStatus: "Restricted",
+    complianceStatus: "Watch",
+    accidentHistory: "2 (side-swipe 2023, gate bump 2025)",
+    violationHistory: "3 traffic",
+    warningCount: "1",
+    disciplinaryActions: "Verbal warning (2025)",
+    incidentReports: "4",
+    insuranceClaims: "1 open",
+    lastIncidentDate: "03 Dec 2025",
+    incidentSeverity: "Medium",
+    licenseDocument: "On file",
+    idProof: "Aadhaar · On file",
+    employmentDocuments: "On file",
+    trainingCertificates: "Partial",
+    medicalCertificate: "Restricted · On file",
+    otherDocuments: "Fitness note",
+    documentVerification: "Verified",
   },
   "33333333-3333-3333-3333-333333333334": {
     driverCode: "DRV-1004",
@@ -147,6 +345,54 @@ const DEMO_PACKS: Record<string, Partial<DriverDetails>> = {
     shift: "—",
     reasonForLeaving: "Resigned — personal reasons",
     leavingDate: "15 Jun 2026",
+    performanceRating: "3.4 / 5",
+    totalTrips: "986",
+    totalDrivingHours: "812 h",
+    avgTripDistance: "22.5 mi",
+    avgSpeed: "27.3 mph",
+    maxSpeed: "78 mph",
+    hardBrakingEvents: "28",
+    harshAccelEvents: "21",
+    harshCorneringEvents: "17",
+    speedingEvents: "24",
+    overspeedingRate: "3.4%",
+    accidentCount: "5",
+    nearMissCount: "9",
+    safetyViolations: "8",
+    trafficViolations: "11",
+    complaints: "6",
+    customerRating: "3.2 / 5",
+    currentAvailability: "Unavailable",
+    workingDays: "1,624",
+    daysWorked: "1,448",
+    daysAbsent: "64",
+    leaveDays: "112",
+    lateArrivals: "31",
+    overtimeHours: "196 h",
+    lastActiveDate: "15 Jun 2026",
+    trainingCompleted: "5 / 8",
+    safetyTraining: "Expired",
+    defensiveDrivingTraining: "Expired",
+    lastTrainingDate: "08 Feb 2024",
+    nextTrainingDue: "—",
+    certificationStatus: "Expired",
+    medicalFitnessStatus: "Lapsed",
+    complianceStatus: "Non-compliant",
+    accidentHistory: "5 (2 at-fault, 3 minor)",
+    violationHistory: "11 traffic",
+    warningCount: "4",
+    disciplinaryActions: "Written warning + 2 suspensions",
+    incidentReports: "9",
+    insuranceClaims: "3 (2 settled, 1 denied)",
+    lastIncidentDate: "02 May 2026",
+    incidentSeverity: "High",
+    licenseDocument: "Archived",
+    idProof: "Aadhaar · Archived",
+    employmentDocuments: "Archived",
+    trainingCertificates: "Archived",
+    medicalCertificate: "Expired",
+    otherDocuments: "Exit clearance",
+    documentVerification: "Archived",
   },
 };
 
@@ -154,12 +400,12 @@ function filled(value: unknown): value is string {
   return typeof value === "string" && value.trim().length > 0;
 }
 
-/** API fields win. Missing personal/license/employment filled from demo pack. */
+/** Seed fills gaps only. Live API / software / manual patch always win — including 0. */
 export function hydrateDriver(raw: DriverDetails): DriverDetails {
   const pack = DEMO_PACKS[raw.id] ?? {};
   const merged: DriverDetails = { ...pack, ...raw };
   (Object.keys(pack) as Array<keyof DriverDetails>).forEach((key) => {
-    if (!filled(merged[key] as unknown)) {
+    if (missingMetric(merged[key])) {
       (merged as Record<string, unknown>)[key as string] = pack[key];
     }
   });
@@ -505,6 +751,125 @@ export function DriverDetailsOverlay({
                     ["Current Status", meta?.label ?? d.status],
                     ["Reason for Leaving", dash(d.reasonForLeaving)],
                     ["Leaving Date", dash(d.leavingDate)],
+                  ]}
+                />
+              </OverlaySection>
+
+              <OverlaySection
+                title="Driving / Performance"
+                icon={Gauge}
+                iconClass="text-emerald-600"
+              >
+                <FieldGrid
+                  rows={[
+                    ["Safety Score", `${Number(d.safetyScore).toFixed(1)} / 100`],
+                    ["Performance Rating", dash(d.performanceRating)],
+                    [
+                      "Total Miles Driven",
+                      `${(d.totalMiles ?? 0).toLocaleString("en-IN")} mi`,
+                    ],
+                    ["Total Trips", dash(d.totalTrips)],
+                    ["Total Driving Hours", dash(d.totalDrivingHours)],
+                    ["Average Trip Distance", dash(d.avgTripDistance)],
+                    ["Average Speed", dash(d.avgSpeed)],
+                    ["Maximum Speed", dash(d.maxSpeed)],
+                    ["Hard Braking Events", dash(d.hardBrakingEvents)],
+                    ["Harsh Acceleration Events", dash(d.harshAccelEvents)],
+                    ["Harsh Cornering Events", dash(d.harshCorneringEvents)],
+                    ["Speeding Events", dash(d.speedingEvents)],
+                    ["Overspeeding Rate", dash(d.overspeedingRate)],
+                    [
+                      "Accident Count",
+                      dash(d.accidentCount) === "—"
+                        ? String(d.incidentCount ?? "—")
+                        : dash(d.accidentCount),
+                    ],
+                    ["Near-Miss Count", dash(d.nearMissCount)],
+                    ["Safety Violations", dash(d.safetyViolations)],
+                    ["Traffic Violations", dash(d.trafficViolations)],
+                    ["Complaints", dash(d.complaints)],
+                    ["Customer Rating", dash(d.customerRating)],
+                  ]}
+                />
+              </OverlaySection>
+
+              <OverlaySection
+                title="Attendance / Availability"
+                icon={CalendarCheck}
+                iconClass="text-indigo-600"
+              >
+                <FieldGrid
+                  rows={[
+                    ["Current Availability", dash(d.currentAvailability)],
+                    ["Working Days", dash(d.workingDays)],
+                    ["Days Worked", dash(d.daysWorked)],
+                    ["Days Absent", dash(d.daysAbsent)],
+                    ["Leave Days", dash(d.leaveDays)],
+                    ["Late Arrivals", dash(d.lateArrivals)],
+                    ["Overtime Hours", dash(d.overtimeHours)],
+                    ["Last Active Date", dash(d.lastActiveDate)],
+                  ]}
+                />
+              </OverlaySection>
+
+              <OverlaySection
+                title="Training & Compliance"
+                icon={GraduationCap}
+                iconClass="text-fuchsia-600"
+              >
+                <FieldGrid
+                  rows={[
+                    ["Training Completed", dash(d.trainingCompleted)],
+                    ["Safety Training", dash(d.safetyTraining)],
+                    ["Defensive Driving Training", dash(d.defensiveDrivingTraining)],
+                    ["Last Training Date", dash(d.lastTrainingDate)],
+                    ["Next Training Due", dash(d.nextTrainingDue)],
+                    ["Certification Status", dash(d.certificationStatus)],
+                    [
+                      "Medical/Fitness Certification Status",
+                      dash(d.medicalFitnessStatus),
+                    ],
+                    ["Compliance Status", dash(d.complianceStatus)],
+                  ]}
+                />
+              </OverlaySection>
+
+              <OverlaySection
+                title="Incidents & Records"
+                icon={AlertTriangle}
+                iconClass="text-rose-600"
+              >
+                <FieldGrid
+                  rows={[
+                    ["Accident History", dash(d.accidentHistory)],
+                    ["Violation History", dash(d.violationHistory)],
+                    ["Warning Count", dash(d.warningCount)],
+                    ["Disciplinary Actions", dash(d.disciplinaryActions)],
+                    ["Incident Reports", dash(d.incidentReports)],
+                    ["Insurance Claims", dash(d.insuranceClaims)],
+                    ["Last Incident Date", dash(d.lastIncidentDate)],
+                    ["Incident Severity", dash(d.incidentSeverity)],
+                  ]}
+                />
+              </OverlaySection>
+
+              <OverlaySection
+                title="Documents"
+                icon={FolderOpen}
+                iconClass="text-teal-600"
+              >
+                <FieldGrid
+                  rows={[
+                    ["License Document", dash(d.licenseDocument)],
+                    ["ID Proof", dash(d.idProof)],
+                    ["Employment Documents", dash(d.employmentDocuments)],
+                    ["Training Certificates", dash(d.trainingCertificates)],
+                    ["Medical Certificate", dash(d.medicalCertificate)],
+                    ["Other Documents", dash(d.otherDocuments)],
+                    [
+                      "Document Verification Status",
+                      dash(d.documentVerification),
+                    ],
                   ]}
                 />
               </OverlaySection>

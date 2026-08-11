@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { io } from "socket.io-client";
 import { useReducedMotion } from "framer-motion";
 import { Gauge, Navigation, Route, Search, Users } from "lucide-react";
 import { api } from "@/lib/api";
+import { mergeDriver } from "@/lib/driverMetrics";
 import { DriverLeaderboard } from "@/components/drivers/DriverLeaderboard";
 import {
   DriverDetailsOverlay,
@@ -26,6 +28,25 @@ export default function DriversPage() {
     api<{ data: DriverDetails[] }>("/api/v1/drivers")
       .then((res) => setRows(res.data.map(hydrateDriver)))
       .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    const url = process.env.NEXT_PUBLIC_WS_URL ?? "http://localhost:3001";
+    const socket = io(url, { transports: ["websocket", "polling"] });
+    const onUpdate = (row: DriverDetails) => {
+      const next = hydrateDriver(row);
+      setRows((prev) =>
+        prev.map((d) => (d.id === next.id ? mergeDriver(d, next) : d)),
+      );
+      setSelected((sel) =>
+        sel && sel.id === next.id ? mergeDriver(sel, next) : sel,
+      );
+    };
+    socket.on("driver_update", onUpdate);
+    return () => {
+      socket.off("driver_update", onUpdate);
+      socket.disconnect();
+    };
   }, []);
 
   const filtered = useMemo(() => {

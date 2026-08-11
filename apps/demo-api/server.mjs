@@ -519,6 +519,22 @@ const documents = [
   },
 ];
 
+function applyDriverPatch(id, patch = {}, source = "software") {
+  const d = drivers.find((x) => x.id === id);
+  if (!d) return null;
+  const next = { ...patch };
+  delete next.source;
+  delete next.id;
+  for (const [key, value] of Object.entries(next)) {
+    if (value === undefined) continue;
+    d[key] = value;
+  }
+  d.updatedAt = new Date().toISOString();
+  d.lastUpdateSource = source === "manual" ? "manual" : "software";
+  io.emit("driver_update", d);
+  return d;
+}
+
 app.get("/health", (_req, res) => res.json({ ok: true, mode: "demo" }));
 
 app.post("/api/v1/auth/login", (req, res) => {
@@ -714,6 +730,16 @@ app.post("/api/v1/vehicles", (req, res) => {
   res.status(201).json({ data: row });
 });
 app.get("/api/v1/drivers", (_req, res) => res.json({ data: drivers }));
+app.get("/api/v1/drivers/:id", (req, res) => {
+  const d = drivers.find((x) => x.id === req.params.id);
+  if (!d) return res.status(404).json({ error: "Not found" });
+  res.json({ data: d });
+});
+app.patch("/api/v1/drivers/:id", (req, res) => {
+  const d = applyDriverPatch(req.params.id, req.body ?? {}, req.body?.source);
+  if (!d) return res.status(404).json({ error: "Not found" });
+  res.json({ data: d });
+});
 app.get("/api/v1/alerts", (_req, res) => res.json({ data: alerts }));
 app.get("/api/v1/geofences", (_req, res) => res.json({ data: geofences }));
 app.get("/api/v1/routes", (_req, res) => res.json({ data: routes }));
@@ -825,6 +851,28 @@ app.post("/api/v1/telemetry/gps", (req, res) => {
     };
     alerts.unshift(alert);
     io.emit("alert", alert);
+    const name = v?.currentDriverName;
+    if (name) {
+      const driver = drivers.find((x) => x.fullName === name);
+      if (driver) {
+        const n = Number(String(driver.speedingEvents ?? "0").replace(/\D/g, "")) || 0;
+        const speedMph = Math.round((req.body.speed ?? 0) * 0.621371);
+        const prevMax = Number(String(driver.maxSpeed ?? "0").replace(/\D/g, "")) || 0;
+        applyDriverPatch(
+          driver.id,
+          {
+            speedingEvents: String(n + 1),
+            lastActiveDate: new Date().toLocaleDateString("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            }),
+            maxSpeed: `${Math.max(prevMax, speedMph)} mph`,
+          },
+          "software",
+        );
+      }
+    }
   }
   res.json({ success: true });
 });

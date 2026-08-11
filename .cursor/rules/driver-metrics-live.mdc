@@ -1,0 +1,15 @@
+---
+description: Driver overlay metrics stay live — software and manual writes both update the same fields
+alwaysApply: true
+---
+
+# Driver metrics are live
+
+Every Driver Details overlay field (profile, license, employment, driving/performance, attendance, training, incidents, documents) is **mutable state**, not decoration.
+
+- **Software write**: trips, GPS/telematics, attendance, training jobs, incident ingest — patch the driver record. Overlay, roster, leaderboard, tiles must show the new value.
+- **Manual write**: operator edit / PATCH `/api/v1/drivers/:id` with `source: "manual"` — same fields, same merge. Do not keep a second hardcoded copy.
+- One merge: `mergeDriver(current, patch)` in `apps/web/src/lib/driverMetrics.ts`. API `Object.assign` + `driver_update` socket. Client replaces that row + open overlay.
+- Seed (`DEMO_PACKS`) fills **missing keys only**. Never overwrite `0`, `"0"`, or an explicit update.
+- Derived display (Safety Score, Total Miles) reads live `safetyScore` / `totalMiles`. If software bumps miles/trips, recompute avg trip / hours when those fields are part of the patch.
+- Do not add a parallel static table for these metrics.
