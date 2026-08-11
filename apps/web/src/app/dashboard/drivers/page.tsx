@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { io } from "socket.io-client";
 import { useReducedMotion } from "framer-motion";
-import { Gauge, Navigation, Route, Search, Users } from "lucide-react";
+import { Gauge, Navigation, Plus, Route, Search, Users } from "lucide-react";
+import { Button } from "@/components/common/Button";
+import { NewRiderFormOverlay } from "@/components/drivers/NewRiderFormOverlay";
 import { api } from "@/lib/api";
 import { mergeDriver } from "@/lib/driverMetrics";
 import { DriverLeaderboard } from "@/components/drivers/DriverLeaderboard";
@@ -17,12 +19,14 @@ import { Card } from "@/components/common/Card";
 import { Badge } from "@/components/common/Badge";
 import { LiveMetricTile } from "@/components/common/LiveMetricTile";
 import { PageHero } from "@/components/common/PageHero";
+import { useBlockHistorySwipe } from "@/hooks/useBlockHistorySwipe";
 
 
 export default function DriversPage() {
   const [rows, setRows] = useState<DriverDetails[]>([]);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<DriverDetails | null>(null);
+  const [newOpen, setNewOpen] = useState(false);
 
   useEffect(() => {
     api<{ data: DriverDetails[] }>("/api/v1/drivers")
@@ -56,6 +60,7 @@ export default function DriversPage() {
   }, [rows, search]);
 
   const reduce = useReducedMotion();
+  const rosterSwipeLock = useBlockHistorySwipe<HTMLDivElement>();
   const metrics = useMemo(() => {
     const current = rows.filter((d) => d.status !== "OFFBOARDED");
     const miles = current.reduce((s, d) => s + (d.totalMiles ?? 0), 0);
@@ -159,31 +164,48 @@ export default function DriversPage() {
       </div>
 
       <div className="grid min-h-0 flex-1 grid-cols-1 xl:grid-cols-12 xl:grid-rows-[minmax(0,1fr)] gap-4 items-stretch overflow-hidden">
+        <div
+          ref={rosterSwipeLock}
+          className="xl:col-span-8 min-h-0 h-full min-w-0 sf-no-history-swipe"
+        >
         <Card
           accent="lilac"
-          className="xl:col-span-8 min-h-0 h-full min-w-0 flex flex-col overflow-hidden"
+          className="h-full min-w-0 flex flex-col overflow-hidden"
         >
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3 shrink-0">
             <h2 className="font-display text-xl font-semibold text-slate-900">
               Roster
             </h2>
-            <label className="relative ml-auto inline-flex items-center">
-              <Search
-                size={16}
-                className="pointer-events-none absolute left-3 text-violet-600/70"
-                aria-hidden
-              />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by name…"
-                aria-label="Search drivers by name"
-                size={28}
-                className="w-auto max-w-full rounded-xl border-violet-200 bg-violet-50/50 pl-9 text-sm focus:border-violet-400 focus:ring-violet-400"
-              />
-            </label>
+            <div className="ml-auto flex items-center gap-2">
+              <label className="relative inline-flex items-center">
+                <Search
+                  size={16}
+                  className="pointer-events-none absolute left-3 text-violet-600/70"
+                  aria-hidden
+                />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search by name…"
+                  aria-label="Search drivers by name"
+                  size={28}
+                  className="w-auto max-w-full rounded-xl border-violet-200 bg-violet-50/50 pl-9 text-sm focus:border-violet-400 focus:ring-violet-400"
+                />
+              </label>
+              <Button
+                size="sm"
+                variant="lilac"
+                className="rounded-full px-4 py-2 font-semibold tracking-tight"
+                onClick={() => setNewOpen(true)}
+              >
+                <span className="grid h-5 w-5 place-items-center rounded-full bg-white/20">
+                  <Plus size={13} strokeWidth={2.5} />
+                </span>
+                New rider
+              </Button>
+            </div>
           </div>
-          <div className="grid grid-cols-[1.4fr_1.1fr_0.55fr_0.9fr] gap-2 border-b border-slate-100 pb-2 text-sm text-slate-500 shrink-0">
+          <div className="grid grid-cols-[1.4fr_1.1fr_0.55fr_0.9fr] gap-2 border-b-2 border-slate-800 pb-2 text-sm text-slate-500 shrink-0">
             <span className="font-medium">Name</span>
             <span className="font-medium">License</span>
             <span className="font-medium">Safety</span>
@@ -223,6 +245,7 @@ export default function DriversPage() {
             })}
           </div>
         </Card>
+        </div>
         <div className="xl:col-span-4 min-h-0 h-full overflow-hidden">
           <DriverLeaderboard
             drivers={rows}
@@ -234,6 +257,11 @@ export default function DriversPage() {
         </div>
       </div>
 
+      <NewRiderFormOverlay
+        open={newOpen}
+        onClose={() => setNewOpen(false)}
+        onCreated={(d) => setRows((prev) => [hydrateDriver(d), ...prev])}
+      />
       <DriverDetailsOverlay
         open={Boolean(selected)}
         driver={selected}

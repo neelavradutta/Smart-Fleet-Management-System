@@ -108,6 +108,11 @@
     width: 0;
     height: 0;
   }
+
+  .sf-no-history-swipe {
+    overscroll-behavior-x: none;
+    touch-action: pan-y;
+  }
 }
 
 @layer utilities {

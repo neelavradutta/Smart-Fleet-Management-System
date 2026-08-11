@@ -558,7 +558,7 @@ const DOC_SLOTS: Array<{ key: DocSlotKey; label: string }> = [
   { key: "otherDocuments", label: "Other Documents" },
 ];
 
-type DocFile = { fileName: string; fileUrl: string; mime: string };
+export type DocFile = { fileName: string; fileUrl: string; mime: string };
 
 const docMemory = new Map<string, DocFile>();
 
@@ -566,7 +566,13 @@ function docMemKey(driverId: string, key: string) {
   return `${driverId}:${key}`;
 }
 
-function DocFilePreview({
+export function stashDriverDoc(driverId: string, key: string, file: DocFile) {
+  const prev = docMemory.get(docMemKey(driverId, key));
+  if (prev?.fileUrl.startsWith("blob:")) URL.revokeObjectURL(prev.fileUrl);
+  docMemory.set(docMemKey(driverId, key), file);
+}
+
+export function DocFilePreview({
   label,
   file,
 }: {
@@ -604,7 +610,7 @@ function DocFilePreview({
   );
 }
 
-function DocUploadLayer({
+export function DocUploadLayer({
   job,
   onDismiss,
   onRemove,
@@ -708,7 +714,7 @@ function DocUploadLayer({
   );
 }
 
-function ViewEyeIcon({ size = 16 }: { size?: number }) {
+export function ViewEyeIcon({ size = 16 }: { size?: number }) {
   return (
     <svg
       width={size}

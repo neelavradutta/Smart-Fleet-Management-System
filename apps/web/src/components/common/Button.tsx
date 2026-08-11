@@ -15,6 +15,7 @@ const buttonVariants = cva(
         ghost: "hover:bg-sky-50 text-slate-700",
         danger: "bg-rose-500 text-white hover:bg-rose-600 shadow-coral",
         success: "bg-emerald-500 text-white hover:bg-emerald-600 shadow-mint",
+        lilac: "bg-violet-500 text-white hover:bg-violet-600 shadow-soft",
       },
       size: {
         sm: "px-3 py-1.5 text-sm",

@@ -738,6 +738,66 @@ app.post("/api/v1/vehicles", (req, res) => {
   res.status(201).json({ data: row });
 });
 app.get("/api/v1/drivers", (_req, res) => res.json({ data: drivers }));
+app.post("/api/v1/drivers", (req, res) => {
+  const b = req.body ?? {};
+  if (!b.fullName || !b.email || !b.licenseNumber) {
+    return res.status(400).json({ error: "Full name, email, and license number required." });
+  }
+  const n = drivers.length + 1;
+  const created = new Date().toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+  const row = {
+    id: randomUUID(),
+    driverCode: b.driverCode || `DRV-${String(1000 + n).padStart(4, "0")}`,
+    fullName: b.fullName,
+    email: b.email,
+    phone: b.phone ?? null,
+    licenseNumber: b.licenseNumber,
+    status: b.status || "ON_DUTY",
+    safetyScore: "100.0",
+    recentScores: [],
+    onTimePct: 100,
+    incidentCount: 0,
+    recentOverall: [],
+    totalMiles: 0,
+    tripsToday: 0,
+    employeeId: b.employeeId || `EMP-${String(1200 + n)}`,
+    dateOfBirth: b.dateOfBirth ?? null,
+    address: b.address ?? null,
+    nationality: b.nationality ?? null,
+    gender: b.gender ?? null,
+    emergencyContact: b.emergencyContact ?? null,
+    profileCreatedAt: created,
+    licenseType: b.licenseType ?? null,
+    licenseClass: b.licenseClass ?? null,
+    licenseIssueDate: b.licenseIssueDate ?? null,
+    licenseExpiry: b.licenseExpiry ?? null,
+    licenseAuthority: b.licenseAuthority ?? null,
+    licenseStatus: b.licenseStatus ?? "Valid",
+    licenseVerification: b.licenseVerification ?? "Pending",
+    licenseRestrictions: b.licenseRestrictions ?? null,
+    employmentType: b.employmentType ?? "Full-time",
+    joiningDate: b.joiningDate ?? null,
+    department: b.department ?? null,
+    assignedBranch: b.assignedBranch ?? null,
+    supervisor: b.supervisor ?? null,
+    shift: b.shift ?? null,
+    reasonForLeaving: null,
+    leavingDate: null,
+    licenseDocument: b.licenseDocument || "None",
+    idProof: b.idProof || "None",
+    employmentDocuments: b.employmentDocuments || "None",
+    trainingCertificates: b.trainingCertificates || "None",
+    medicalCertificate: b.medicalCertificate || "None",
+    otherDocuments: b.otherDocuments || "None",
+  };
+  drivers.unshift(row);
+  io.emit("driver_update", row);
+  res.status(201).json({ data: row });
+});
 app.get("/api/v1/drivers/:id", (req, res) => {
   const d = drivers.find((x) => x.id === req.params.id);
   if (!d) return res.status(404).json({ error: "Not found" });
