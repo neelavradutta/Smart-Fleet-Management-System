@@ -4,40 +4,27 @@ import { useEffect, useMemo, useState } from "react";
 import { useReducedMotion } from "framer-motion";
 import { Gauge, Navigation, Route, Search, Users } from "lucide-react";
 import { api } from "@/lib/api";
-import { DriverLeaderboard, type LeaderDriver } from "@/components/drivers/DriverLeaderboard";
+import { DriverLeaderboard } from "@/components/drivers/DriverLeaderboard";
+import {
+  DriverDetailsOverlay,
+  DRIVER_STATUS,
+  hydrateDriver,
+  type DriverDetails,
+} from "@/components/drivers/DriverDetailsOverlay";
 import { Card } from "@/components/common/Card";
 import { Badge } from "@/components/common/Badge";
 import { LiveMetricTile } from "@/components/common/LiveMetricTile";
 import { PageHero } from "@/components/common/PageHero";
 
-type Driver = LeaderDriver & {
-  email: string;
-  phone: string | null;
-  licenseNumber: string;
-  status: string;
-  tripsToday?: number;
-};
-
-const DRIVER_STATUS: Record<
-  string,
-  { label: string; tone: "success" | "warning" | "danger" | "neutral" }
-> = {
-  ON_DUTY: { label: "On Duty", tone: "success" },
-  OFF_DUTY: { label: "Off Duty", tone: "neutral" },
-  ON_LEAVE: { label: "On Leave", tone: "warning" },
-  OFFBOARDED: { label: "Offboarded", tone: "danger" },
-  ACTIVE: { label: "On Duty", tone: "success" },
-  INACTIVE: { label: "Off Duty", tone: "neutral" },
-};
-
 
 export default function DriversPage() {
-  const [rows, setRows] = useState<Driver[]>([]);
+  const [rows, setRows] = useState<DriverDetails[]>([]);
   const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<DriverDetails | null>(null);
 
   useEffect(() => {
-    api<{ data: Driver[] }>("/api/v1/drivers")
-      .then((res) => setRows(res.data))
+    api<{ data: DriverDetails[] }>("/api/v1/drivers")
+      .then((res) => setRows(res.data.map(hydrateDriver)))
       .catch(console.error);
   }, []);
 
@@ -189,9 +176,11 @@ export default function DriversPage() {
                   tone: "neutral" as const,
                 };
               return (
-                <div
+                <button
                   key={d.id}
-                  className="grid shrink-0 grid-cols-[1.4fr_1.1fr_0.55fr_0.9fr] items-center gap-2 py-3 border-b border-slate-50 last:border-0"
+                  type="button"
+                  onClick={() => setSelected(d)}
+                  className="grid shrink-0 grid-cols-[1.4fr_1.1fr_0.55fr_0.9fr] items-center gap-2 py-3 border-b border-slate-50 last:border-0 text-left w-full rounded-lg px-1 -mx-1 hover:bg-violet-50/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300"
                 >
                   <div className="min-w-0">
                     <p className="font-medium text-slate-900 truncate">
@@ -208,7 +197,7 @@ export default function DriversPage() {
                   <div>
                     <Badge tone={meta.tone}>{meta.label}</Badge>
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
@@ -217,6 +206,12 @@ export default function DriversPage() {
           <DriverLeaderboard drivers={rows} />
         </div>
       </div>
+
+      <DriverDetailsOverlay
+        open={Boolean(selected)}
+        driver={selected}
+        onClose={() => setSelected(null)}
+      />
     </div>
   );
 }
