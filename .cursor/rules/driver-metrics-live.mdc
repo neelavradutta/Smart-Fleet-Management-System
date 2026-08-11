@@ -13,3 +13,4 @@ Every Driver Details overlay field (profile, license, employment, driving/perfor
 - Seed (`DEMO_PACKS`) fills **missing keys only**. Never overwrite `0`, `"0"`, or an explicit update.
 - Derived display (Safety Score, Total Miles) reads live `safetyScore` / `totalMiles`. If software bumps miles/trips, recompute avg trip / hours when those fields are part of the patch.
 - Do not add a parallel static table for these metrics.
+- Driver Details field order lock: Address stays right after Date of Birth. New personal fields go after Nationality — never insert before Address.

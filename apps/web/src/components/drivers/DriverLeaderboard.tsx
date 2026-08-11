@@ -281,7 +281,13 @@ function TrendMark({
   );
 }
 
-export function DriverLeaderboard({ drivers }: { drivers: LeaderDriver[] }) {
+export function DriverLeaderboard({
+  drivers,
+  onSelect,
+}: {
+  drivers: LeaderDriver[];
+  onSelect?: (driver: LeaderDriver) => void;
+}) {
   const sorted = [...drivers].sort(
     (a, b) => overallScore(b, drivers) - overallScore(a, drivers),
   );
@@ -293,13 +299,15 @@ export function DriverLeaderboard({ drivers }: { drivers: LeaderDriver[] }) {
       </h2>
       <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto overscroll-contain sf-hide-scrollbar">
         {sorted.map((driver, idx) => (
-          <motion.div
+          <motion.button
             key={driver.id}
+            type="button"
+            onClick={() => onSelect?.(driver)}
             initial={{ opacity: 0, x: -16 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: Math.min(idx, 6) * 0.06, type: "spring", stiffness: 320 }}
             whileHover={{ x: 4, scale: 1.01 }}
-            className={`flex h-[calc((100%-1rem)/3)] min-h-[4.75rem] shrink-0 items-center gap-3 px-3 py-3 rounded-xl border bg-gradient-to-r ${
+            className={`flex h-[calc((100%-1rem)/3)] min-h-[4.75rem] shrink-0 items-center gap-3 px-3 py-3 rounded-xl border bg-gradient-to-r text-left w-full cursor-pointer ${
               rowTint[Math.min(idx, 3)]
             }`}
           >
@@ -321,7 +329,7 @@ export function DriverLeaderboard({ drivers }: { drivers: LeaderDriver[] }) {
               <p className="text-[11px] text-slate-500 mt-0.5">/100</p>
             </div>
             <TrendMark driver={driver} cohort={drivers} />
-          </motion.div>
+          </motion.button>
         ))}
       </div>
     </Card>

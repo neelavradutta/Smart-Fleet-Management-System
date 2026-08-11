@@ -224,7 +224,13 @@ export default function DriversPage() {
           </div>
         </Card>
         <div className="xl:col-span-4 min-h-0 h-full overflow-hidden">
-          <DriverLeaderboard drivers={rows} />
+          <DriverLeaderboard
+            drivers={rows}
+            onSelect={(d) => {
+              const full = rows.find((r) => r.id === d.id) ?? d;
+              setSelected(hydrateDriver(full as DriverDetails));
+            }}
+          />
         </div>
       </div>
 

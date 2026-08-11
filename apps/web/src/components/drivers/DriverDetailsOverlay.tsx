@@ -43,6 +43,8 @@ export type DriverDetails = LeaderDriver & {
   driverCode?: string | null;
   employeeId?: string | null;
   dateOfBirth?: string | null;
+  nationality?: string | null;
+  gender?: string | null;
   address?: string | null;
   emergencyContact?: string | null;
   profileCreatedAt?: string | null;
@@ -118,6 +120,8 @@ const DEMO_PACKS: Record<string, Partial<DriverDetails>> = {
     driverCode: "DRV-1001",
     employeeId: "EMP-1024",
     dateOfBirth: "14 Mar 1988",
+    nationality: "Indian",
+    gender: "Male",
     address: "12/4 Andheri East, Mumbai, MH\n400069",
     emergencyContact: "+91 9800011112",
     profileCreatedAt: "12 Jan 2022",
@@ -188,6 +192,8 @@ const DEMO_PACKS: Record<string, Partial<DriverDetails>> = {
     driverCode: "DRV-1002",
     employeeId: "EMP-1088",
     dateOfBirth: "02 Nov 1992",
+    nationality: "Indian",
+    gender: "Female",
     address: "88 Bandra West, Mumbai, MH\n400050",
     emergencyContact: "+91 9800022223",
     profileCreatedAt: "03 Mar 2023",
@@ -258,6 +264,8 @@ const DEMO_PACKS: Record<string, Partial<DriverDetails>> = {
     driverCode: "DRV-1003",
     employeeId: "EMP-1142",
     dateOfBirth: "27 Jul 1985",
+    nationality: "Indian",
+    gender: "Male",
     address: "41 Viman Nagar, Pune, MH\n411014",
     emergencyContact: "+91 9800033334",
     profileCreatedAt: "18 Aug 2021",
@@ -328,6 +336,8 @@ const DEMO_PACKS: Record<string, Partial<DriverDetails>> = {
     driverCode: "DRV-1004",
     employeeId: "EMP-0961",
     dateOfBirth: "05 Jan 1980",
+    nationality: "Indian",
+    gender: "Male",
     address: "6 Thane West, Thane, MH\n400601",
     emergencyContact: "+91 9800044445",
     profileCreatedAt: "09 Feb 2020",
@@ -938,14 +948,6 @@ function DocumentsPanel({ driver }: { driver: DriverDetails }) {
                     <p className="text-xs text-slate-500">
                       {dash(driver.driverCode)} · {dash(driver.employeeId)}
                     </p>
-                    <p className="mt-4 text-sm font-medium text-slate-800">
-                      {preview.status}
-                    </p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      {preview.status === "Uploaded"
-                        ? "Uploaded. Use the trash to remove."
-                        : "None — nothing uploaded yet."}
-                    </p>
                   </div>
                 )}
               </div>
@@ -1132,6 +1134,8 @@ export function DriverDetailsOverlay({
                     ["Phone Number", formatPhone(d.phone)],
                     ["Date of Birth", dash(d.dateOfBirth)],
                     ["Address", formatAddress(d.address)],
+                    ["Nationality", dash(d.nationality)],
+                    ["Gender", dash(d.gender)],
                     ["Emergency Contact", formatPhone(cleanEmergency(d.emergencyContact))],
                     ["Profile Created Date", dash(d.profileCreatedAt)],
                   ]}
