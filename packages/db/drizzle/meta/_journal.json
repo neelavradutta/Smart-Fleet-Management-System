@@ -15,6 +15,13 @@
       "when": 1723214400000,
       "tag": "0001_ops",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1723300800000,
+      "tag": "0002_driver_status",
+      "breakpoints": true
     }
   ]
 }

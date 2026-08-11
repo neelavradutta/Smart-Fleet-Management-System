@@ -2,7 +2,7 @@ export type SubscriptionTier = "STARTER" | "PRO" | "ENTERPRISE";
 
 export type VehicleType = "VAN" | "TRUCK" | "BIKE" | "CAR";
 export type VehicleStatus = "ACTIVE" | "INACTIVE" | "MAINTENANCE" | "RETIRED";
-export type DriverStatus = "ACTIVE" | "INACTIVE" | "ON_LEAVE";
+export type DriverStatus = "ON_DUTY" | "OFF_DUTY" | "ON_LEAVE" | "OFFBOARDED";
 
 export type AlertType =
   | "GEOFENCE_VIOLATION"

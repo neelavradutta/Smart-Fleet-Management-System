@@ -7,7 +7,12 @@ export const vehicleStatusSchema = z.enum([
   "MAINTENANCE",
   "RETIRED",
 ]);
-export const driverStatusSchema = z.enum(["ACTIVE", "INACTIVE", "ON_LEAVE"]);
+export const driverStatusSchema = z.enum([
+  "ON_DUTY",
+  "OFF_DUTY",
+  "ON_LEAVE",
+  "OFFBOARDED",
+]);
 export const geofenceTypeSchema = z.enum([
   "DEPOT",
   "RESTRICTED",
@@ -58,7 +63,7 @@ export const createDriverSchema = z.object({
   fullName: z.string().min(2).max(120),
   licenseNumber: z.string().min(3).max(50),
   licenseExpiry: z.string().date().optional(),
-  status: driverStatusSchema.default("ACTIVE"),
+  status: driverStatusSchema.default("ON_DUTY"),
   assignedVehicleId: z.string().uuid().optional().nullable(),
 });
 

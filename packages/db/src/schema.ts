@@ -32,9 +32,10 @@ export const vehicleStatusEnum = pgEnum("vehicle_status", [
   "RETIRED",
 ]);
 export const driverStatusEnum = pgEnum("driver_status", [
-  "ACTIVE",
-  "INACTIVE",
+  "ON_DUTY",
+  "OFF_DUTY",
   "ON_LEAVE",
+  "OFFBOARDED",
 ]);
 export const userRoleEnum = pgEnum("user_role", [
   "OWNER",
@@ -145,7 +146,7 @@ export const drivers = pgTable(
     fullName: varchar("full_name", { length: 120 }).notNull(),
     licenseNumber: varchar("license_number", { length: 50 }).notNull(),
     licenseExpiry: date("license_expiry"),
-    status: driverStatusEnum("status").notNull().default("ACTIVE"),
+    status: driverStatusEnum("status").notNull().default("ON_DUTY"),
     safetyScore: numeric("safety_score", { precision: 4, scale: 1 })
       .notNull()
       .default("100.0"),
