@@ -5,11 +5,8 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import {
   AnimatePresence,
-  animate,
   motion,
-  useMotionValue,
   useReducedMotion,
-  useTransform,
 } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -27,6 +24,7 @@ import {
   X,
 } from "lucide-react";
 import { Badge } from "@/components/common/Badge";
+import { LiveMetricTile } from "@/components/common/LiveMetricTile";
 import { cn } from "@/utils/cn";
 import type { VehicleCardModel } from "@/components/vehicles/VehicleCard";
 
@@ -186,8 +184,7 @@ function derivedOps(vehicle: VehicleCardModel) {
   const co2TodayKg = Number(
     ((speedKmh > 0 ? 4.2 : 0.3) + (seed % 7) * 0.35).toFixed(1),
   );
-  const tripsToday =
-    vehicle.status.toLowerCase() === "active" ? 2 + (seed % 4) : 0;
+  const totalTrips = 86 + (seed % 240);
   const fuelSpend = 85000 + (seed % 55) * 2400;
   const maintenanceSpend = 22000 + (seed % 40) * 1800;
   const challanSpend = (seed % 9) * 1500;
@@ -198,7 +195,7 @@ function derivedOps(vehicle: VehicleCardModel) {
     speedKmh,
     odometerKm,
     co2TodayKg,
-    tripsToday,
+    totalTrips,
     fuelSpend,
     maintenanceSpend,
     challanSpend,
@@ -231,134 +228,6 @@ const bumpKm = (d: number) => `${d > 0 ? "+" : ""}${d} km`;
 const bumpInr = (d: number) =>
   `${d > 0 ? "+" : "-"}₹${Math.abs(d).toLocaleString("en-IN")}`;
 const bumpTrips = (d: number) => `${d > 0 ? "+" : ""}${d}`;
-
-function LiveMetricTile({
-  label,
-  icon: Icon,
-  iconTint,
-  bumpClass,
-  bumpDownClass,
-  base,
-  active,
-  reduce,
-  intervalMs,
-  firstDelayMs,
-  deltaMin,
-  deltaMax,
-  formatValue,
-  formatBump,
-  min = Number.NEGATIVE_INFINITY,
-  max = Number.POSITIVE_INFINITY,
-}: {
-  label: string;
-  icon: LucideIcon;
-  iconTint: string;
-  bumpClass: string;
-  bumpDownClass?: string;
-  base: number;
-  active: boolean;
-  reduce: boolean | null;
-  intervalMs: number;
-  firstDelayMs: number;
-  deltaMin: number;
-  deltaMax: number;
-  formatValue: (n: number) => string;
-  formatBump: (delta: number) => string;
-  min?: number;
-  max?: number;
-}) {
-  const [target, setTarget] = useState(base);
-  const [bump, setBump] = useState<{ id: number; delta: number } | null>(null);
-  const mv = useMotionValue(base);
-  const display = useTransform(mv, (v) => formatValue(Math.round(v)));
-
-  useEffect(() => {
-    setTarget(base);
-    mv.set(base);
-    setBump(null);
-  }, [base, mv]);
-
-  useEffect(() => {
-    if (!active) return;
-    const tick = () => {
-      const rolled =
-        deltaMin + Math.floor(Math.random() * (deltaMax - deltaMin + 1));
-
-      setTarget((prev) => {
-        let next = prev + rolled;
-        if (next > max) next = max;
-        if (next < min) next = min;
-        const applied = next - prev;
-        if (applied !== 0) {
-          queueMicrotask(() =>
-            setBump({ id: Date.now(), delta: applied }),
-          );
-        }
-        return next;
-      });
-    };
-    const id = window.setInterval(tick, intervalMs);
-    const first = window.setTimeout(tick, firstDelayMs);
-    return () => {
-      window.clearInterval(id);
-      window.clearTimeout(first);
-    };
-  }, [active, base, intervalMs, firstDelayMs, deltaMin, deltaMax, min, max]);
-
-  useEffect(() => {
-    if (reduce) {
-      mv.set(target);
-      return;
-    }
-    const ctrl = animate(mv, target, {
-      duration: 1.1,
-      ease: [0.22, 1, 0.36, 1],
-    });
-    return () => ctrl.stop();
-  }, [target, mv, reduce]);
-
-  const down = (bump?.delta ?? 0) < 0;
-
-  return (
-    <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/70 p-3">
-      <div
-        className={cn(
-          "mb-2 grid h-8 w-8 place-items-center rounded-xl",
-          iconTint,
-        )}
-      >
-        <Icon size={15} />
-      </div>
-      <p className="text-[11px] uppercase tracking-wide text-slate-500">
-        {label}
-      </p>
-      <motion.p className="text-lg font-semibold text-slate-900 leading-tight tabular-nums">
-        {display}
-      </motion.p>
-
-      <AnimatePresence>
-        {bump && !reduce ? (
-          <motion.span
-            key={bump.id}
-            initial={{ opacity: 0, y: down ? -10 : 10, scale: 0.85 }}
-            animate={{ opacity: 1, y: down ? 18 : -22, scale: 1 }}
-            exit={{ opacity: 0, y: down ? 36 : -40, scale: 0.95 }}
-            transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
-            onAnimationComplete={() =>
-              setBump((cur) => (cur?.id === bump.id ? null : cur))
-            }
-            className={cn(
-              "pointer-events-none absolute right-2 top-9 rounded-full px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm",
-              down ? (bumpDownClass ?? bumpClass) : bumpClass,
-            )}
-          >
-            {formatBump(bump.delta)}
-          </motion.span>
-        ) : null}
-      </AnimatePresence>
-    </div>
-  );
-}
 
 function OverlaySection({
   title,
@@ -747,12 +616,12 @@ export function VehicleDetailsOverlay({
                   formatBump={bumpInr}
                 />
                 <LiveMetricTile
-                  label="Trips today"
+                  label="Total trips"
                   icon={Navigation}
                   iconTint="bg-emerald-50 text-emerald-600"
                   bumpClass="bg-emerald-500"
                   bumpDownClass="bg-emerald-700"
-                  base={ops.tripsToday}
+                  base={ops.totalTrips}
                   active={open}
                   reduce={reduce}
                   intervalMs={5600}

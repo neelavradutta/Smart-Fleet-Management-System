@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Search } from "lucide-react";
+import { useReducedMotion } from "framer-motion";
+import { Gauge, Navigation, Route, Search, Users } from "lucide-react";
 import { api } from "@/lib/api";
 import { DriverLeaderboard, type LeaderDriver } from "@/components/drivers/DriverLeaderboard";
 import { Card } from "@/components/common/Card";
 import { Badge } from "@/components/common/Badge";
+import { LiveMetricTile } from "@/components/common/LiveMetricTile";
 import { PageHero } from "@/components/common/PageHero";
 
 type Driver = LeaderDriver & {
@@ -13,6 +15,7 @@ type Driver = LeaderDriver & {
   phone: string | null;
   licenseNumber: string;
   status: string;
+  tripsToday?: number;
 };
 
 const DRIVER_STATUS: Record<
@@ -113,6 +116,29 @@ export default function DriversPage() {
     return rows.filter((d) => (d.fullName ?? "").toLowerCase().includes(q));
   }, [rows, search]);
 
+  const reduce = useReducedMotion();
+  const metrics = useMemo(() => {
+    const current = rows.filter((d) => d.status !== "OFFBOARDED");
+    const miles = current.reduce((s, d) => s + (d.totalMiles ?? 0), 0);
+    const avg =
+      current.length === 0
+        ? 0
+        : current.reduce((s, d) => s + Number(d.safetyScore), 0) /
+          current.length;
+    const tripsToday = current.reduce((s, d) => {
+      if (typeof d.tripsToday === "number") return s + d.tripsToday;
+      if (d.status === "ON_DUTY" || d.status === "ACTIVE") return s + 8;
+      if (d.status === "OFF_DUTY" || d.status === "INACTIVE") return s + 3;
+      return s;
+    }, 0);
+    return {
+      totalDrivers: current.length,
+      tripsToday,
+      totalMiles: miles,
+      avgSafety: avg,
+    };
+  }, [rows]);
+
   return (
     <div className="space-y-6">
       <PageHero
@@ -120,6 +146,78 @@ export default function DriversPage() {
         title="Driver performance"
         subtitle="Safety scores, licenses, and behavior monitoring."
       />
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <LiveMetricTile
+          label="Total Drivers"
+          icon={Users}
+          iconTint="bg-violet-50 text-violet-600"
+          bumpClass="bg-violet-500"
+          bumpDownClass="bg-violet-700"
+          base={metrics.totalDrivers}
+          active
+          reduce={reduce}
+          intervalMs={6400}
+          firstDelayMs={2800}
+          deltaMin={-1}
+          deltaMax={1}
+          min={0}
+          formatValue={(n) => String(n)}
+          formatBump={(d) => `${d > 0 ? "+" : ""}${d}`}
+        />
+        <LiveMetricTile
+          label="Trips Today"
+          icon={Navigation}
+          iconTint="bg-emerald-50 text-emerald-600"
+          bumpClass="bg-emerald-500"
+          bumpDownClass="bg-emerald-700"
+          base={metrics.tripsToday}
+          active
+          reduce={reduce}
+          intervalMs={5600}
+          firstDelayMs={3000}
+          deltaMin={-1}
+          deltaMax={1}
+          min={0}
+          formatValue={(n) => String(n)}
+          formatBump={(d) => `${d > 0 ? "+" : ""}${d}`}
+        />
+        <LiveMetricTile
+          label="Total Miles"
+          icon={Route}
+          iconTint="bg-sky-50 text-sky-600"
+          bumpClass="bg-sky-500"
+          bumpDownClass="bg-sky-700"
+          base={metrics.totalMiles}
+          active
+          reduce={reduce}
+          intervalMs={5000}
+          firstDelayMs={2400}
+          deltaMin={-3}
+          deltaMax={8}
+          min={0}
+          formatValue={(n) => `${n.toLocaleString("en-IN")} mi`}
+          formatBump={(d) => `${d > 0 ? "+" : ""}${d} mi`}
+        />
+        <LiveMetricTile
+          label="Average Safety Score"
+          icon={Gauge}
+          iconTint="bg-rose-50 text-rose-600"
+          bumpClass="bg-rose-500"
+          bumpDownClass="bg-rose-700"
+          base={metrics.avgSafety}
+          active
+          reduce={reduce}
+          intervalMs={5200}
+          firstDelayMs={2600}
+          deltaMin={-1}
+          deltaMax={1}
+          min={0}
+          max={100}
+          formatValue={(n) => `${n}`}
+          formatBump={(d) => `${d > 0 ? "+" : ""}${d}`}
+        />
+      </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
         <div className="xl:col-span-5">

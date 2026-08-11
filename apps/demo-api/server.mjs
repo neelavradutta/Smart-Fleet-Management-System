@@ -257,6 +257,7 @@ const drivers = [
     status: "ON_DUTY",
     safetyScore: "94.5",
     totalMiles: 12450,
+    tripsToday: 8,
   },
   {
     id: "33333333-3333-3333-3333-333333333332",
@@ -267,6 +268,7 @@ const drivers = [
     status: "OFF_DUTY",
     safetyScore: "98.0",
     totalMiles: 9800,
+    tripsToday: 3,
   },
   {
     id: "33333333-3333-3333-3333-333333333333",
@@ -277,6 +279,7 @@ const drivers = [
     status: "ON_LEAVE",
     safetyScore: "88.0",
     totalMiles: 15200,
+    tripsToday: 0,
   },
   {
     id: "33333333-3333-3333-3333-333333333334",
@@ -287,6 +290,7 @@ const drivers = [
     status: "OFFBOARDED",
     safetyScore: "81.0",
     totalMiles: 22140,
+    tripsToday: 0,
   },
 ];
 
