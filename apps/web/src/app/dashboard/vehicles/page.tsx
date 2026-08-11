@@ -108,10 +108,12 @@ function VehiclesPageInner() {
         <Button
           size="sm"
           variant="success"
-          className="ml-auto gap-1.5"
+          className="ml-auto rounded-full px-4 py-2 font-semibold tracking-tight"
           onClick={() => setNewOpen(true)}
         >
-          <Plus size={14} />
+          <span className="grid h-5 w-5 place-items-center rounded-full bg-white/20">
+            <Plus size={13} strokeWidth={2.5} />
+          </span>
           New fleet
         </Button>
       </div>
