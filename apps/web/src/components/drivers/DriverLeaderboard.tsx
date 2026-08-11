@@ -11,12 +11,17 @@ export type LeaderDriver = {
   totalMiles?: number;
   status?: string;
   recentScores?: number[];
+  tripsToday?: number;
+  onTimePct?: number;
+  incidentCount?: number;
+  recentOverall?: number[];
 };
 
 const rowTint = [
-  "from-amber-50 to-yellow-50/40 border-amber-200",
-  "from-sky-50 to-cyan-50/40 border-sky-200",
-  "from-rose-50 to-orange-50/40 border-rose-200",
+  "from-amber-100 to-yellow-50 border-amber-300",
+  "from-slate-100 to-slate-50 border-slate-300",
+  "from-orange-100 to-amber-50 border-orange-300",
+  "from-white to-slate-50 border-slate-100",
 ];
 
 const medalPalette = [
@@ -131,22 +136,60 @@ function avg(values: number[]) {
   return values.reduce((s, n) => s + n, 0) / values.length;
 }
 
-function displayScore(driver: LeaderDriver) {
-  const current = Number(driver.safetyScore);
-  if (driver.status === "ON_LEAVE") {
-    const last = driver.recentScores?.at(-1);
-    return last != null ? Number(last) : current;
+function clamp(n: number, min = 0, max = 100) {
+  return Math.min(max, Math.max(min, n));
+}
+
+function stddev(values: number[]) {
+  if (values.length < 2) return 0;
+  const m = avg(values) ?? 0;
+  const v = values.reduce((s, n) => s + (n - m) ** 2, 0) / values.length;
+  return Math.sqrt(v);
+}
+
+/** Overall driver score — safety + volume + punctuality + consistency + incidents. */
+export function overallScore(driver: LeaderDriver, cohort: LeaderDriver[]) {
+  if (driver.status === "ON_LEAVE" && driver.recentOverall?.length) {
+    return Number(driver.recentOverall.at(-1));
   }
-  return current;
+
+  const safety = Number(
+    driver.status === "ON_LEAVE"
+      ? (driver.recentScores?.at(-1) ?? driver.safetyScore)
+      : driver.safetyScore,
+  );
+  const onTime = Number(driver.onTimePct ?? 90);
+  const maxMiles = Math.max(...cohort.map((d) => d.totalMiles ?? 0), 1);
+  const activeTrips = cohort.map((d) =>
+    d.status === "ON_LEAVE" || d.status === "OFFBOARDED" ? 0 : (d.tripsToday ?? 0),
+  );
+  const maxTrips = Math.max(...activeTrips, 1);
+  const miles = ((driver.totalMiles ?? 0) / maxMiles) * 100;
+  const trips =
+    driver.status === "ON_LEAVE" || driver.status === "OFFBOARDED"
+      ? 0
+      : ((driver.tripsToday ?? 0) / maxTrips) * 100;
+  const hist = (driver.recentScores ?? []).map(Number);
+  const consistency = clamp(100 - stddev(hist) * 12);
+  const incidents = clamp(100 - (driver.incidentCount ?? 0) * 8);
+
+  return clamp(
+    safety * 0.35 +
+      onTime * 0.2 +
+      miles * 0.15 +
+      trips * 0.1 +
+      consistency * 0.1 +
+      incidents * 0.1,
+  );
 }
 
-function lastReading(driver: LeaderDriver) {
-  const last = driver.recentScores?.at(-1);
-  return last != null ? Number(last) : Number(driver.safetyScore);
+function lastReading(driver: LeaderDriver, cohort: LeaderDriver[]) {
+  if (driver.recentOverall?.length) return Number(driver.recentOverall.at(-1));
+  return overallScore(driver, cohort);
 }
 
-function priorFiveAvg(driver: LeaderDriver, reading: number) {
-  const prior = (driver.recentScores ?? [])
+function priorFiveAvg(series: number[] | undefined, reading: number) {
+  const prior = (series ?? [])
     .slice(0, -1)
     .slice(-5)
     .map(Number)
@@ -196,7 +239,13 @@ function TrendIcon({
   );
 }
 
-function TrendMark({ driver }: { driver: LeaderDriver }) {
+function TrendMark({
+  driver,
+  cohort,
+}: {
+  driver: LeaderDriver;
+  cohort: LeaderDriver[];
+}) {
   if (driver.status === "OFFBOARDED") {
     return (
       <Minus
@@ -208,33 +257,33 @@ function TrendMark({ driver }: { driver: LeaderDriver }) {
     );
   }
 
+  const series = driver.recentOverall ?? driver.recentScores;
+
   if (driver.status === "ON_LEAVE") {
-    const reading = lastReading(driver);
-    const baseline = priorFiveAvg(driver, reading);
+    const reading = lastReading(driver, cohort);
+    const baseline = priorFiveAvg(series, reading);
     if (baseline == null) return null;
     return (
       <TrendIcon
         delta={reading - baseline}
-        label="Trend at last logout"
+        label="Overall trend at last logout"
       />
     );
   }
 
-  const current = Number(driver.safetyScore);
-  const history = (driver.recentScores ?? []).slice(-5).map(Number);
+  const current = overallScore(driver, cohort);
+  const history = (series ?? []).slice(-5).map(Number);
   const baseline =
-    history.length > 0
-      ? avg(history)
-      : priorFiveAvg(driver, current);
+    history.length > 0 ? avg(history) : priorFiveAvg(series, current);
   if (baseline == null) return null;
   return (
-    <TrendIcon delta={current - baseline} label="Vs last 5 average" />
+    <TrendIcon delta={current - baseline} label="Overall vs last 5 average" />
   );
 }
 
 export function DriverLeaderboard({ drivers }: { drivers: LeaderDriver[] }) {
   const sorted = [...drivers].sort(
-    (a, b) => displayScore(b) - displayScore(a),
+    (a, b) => overallScore(b, drivers) - overallScore(a, drivers),
   );
 
   return (
@@ -251,7 +300,7 @@ export function DriverLeaderboard({ drivers }: { drivers: LeaderDriver[] }) {
             transition={{ delay: Math.min(idx, 6) * 0.06, type: "spring", stiffness: 320 }}
             whileHover={{ x: 4, scale: 1.01 }}
             className={`flex h-[calc((100%-1rem)/3)] min-h-[4.75rem] shrink-0 items-center gap-3 px-3 py-3 rounded-xl border bg-gradient-to-r ${
-              idx < 3 ? rowTint[idx] : "from-white to-slate-50 border-slate-100"
+              rowTint[Math.min(idx, 3)]
             }`}
           >
             <div className="w-9 flex justify-center shrink-0">
@@ -267,11 +316,11 @@ export function DriverLeaderboard({ drivers }: { drivers: LeaderDriver[] }) {
             </div>
             <div className="text-right shrink-0">
               <p className="font-display text-xl font-bold text-slate-900 leading-none">
-                {displayScore(driver).toFixed(0)}
+                {overallScore(driver, drivers).toFixed(0)}
               </p>
               <p className="text-[11px] text-slate-500 mt-0.5">/100</p>
             </div>
-            <TrendMark driver={driver} />
+            <TrendMark driver={driver} cohort={drivers} />
           </motion.div>
         ))}
       </div>
