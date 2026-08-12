@@ -12,7 +12,6 @@ import { LiveMetricTile } from "@/components/common/LiveMetricTile";
 import { PageHero } from "@/components/common/PageHero";
 import { NewRouteFormOverlay } from "@/components/routes/NewRouteFormOverlay";
 import { RouteDetailsOverlay } from "@/components/routes/RouteDetailsOverlay";
-import { RouteRunBoard } from "@/components/routes/RouteRunBoard";
 import {
   fmtKm,
   isRouteDelayed,
@@ -144,12 +143,11 @@ export default function RoutesPage() {
         />
       </div>
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 xl:grid-cols-12 xl:grid-rows-[minmax(0,1fr)] gap-4 items-stretch overflow-hidden">
-        <div className="xl:col-span-8 min-h-0 h-full min-w-0">
-          <Card
-            accent="tan"
-            className="h-full min-w-0 flex flex-col overflow-hidden"
-          >
+      <div className="min-h-0 flex-1 overflow-hidden">
+        <Card
+          accent="tan"
+          className="h-full min-w-0 flex flex-col overflow-hidden"
+        >
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3 shrink-0">
               <h2 className="font-display text-xl font-semibold text-slate-900">
                 Route board
@@ -183,62 +181,82 @@ export default function RoutesPage() {
                 </Button>
               </div>
             </div>
-            <div className="grid grid-cols-[1.4fr_1.2fr_0.55fr_0.7fr_0.85fr] gap-2 border-b-2 border-slate-800 pb-2 text-sm text-slate-500 shrink-0">
-              <span className="font-medium">Route</span>
-              <span className="font-medium">Assignment</span>
-              <span className="font-medium">Stops</span>
-              <span className="font-medium">Distance</span>
-              <span className="font-medium">Status</span>
-            </div>
-            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain sf-hide-scrollbar">
-              {filtered.map((r) => {
-                const meta =
-                  ROUTE_STATUS[r.routeStatus] ?? {
-                    label: r.routeStatus,
-                    tone: "neutral" as const,
-                  };
-                const delayed = isRouteDelayed(r);
-                return (
-                  <button
-                    key={r.id}
-                    type="button"
-                    onClick={() => setSelected(r)}
-                    className="grid shrink-0 grid-cols-[1.4fr_1.2fr_0.55fr_0.7fr_0.85fr] items-center gap-2 py-3 border-b border-slate-50 last:border-0 text-left w-full rounded-lg px-1 -mx-1 hover:bg-tan-50/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tan-300"
-                  >
-                    <div className="min-w-0">
-                      <p className="font-medium text-slate-900 truncate">
-                        {r.code} · {r.name}
-                      </p>
-                      <p className="text-xs text-slate-500 truncate">{r.corridor}</p>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm text-slate-700 truncate">
-                        {r.vehicleNumber ?? "—"}
-                      </p>
-                      <p className="text-xs text-slate-500 truncate">
-                        {r.driverName ?? "Unassigned"}
-                      </p>
-                    </div>
-                    <p className="text-sm font-semibold tabular-nums">
-                      {r.completedStops}/{r.totalStops}
-                    </p>
-                    <p className="text-sm text-slate-700 tabular-nums">
-                      {fmtKm(r.plannedDistanceKm)}
-                    </p>
-                    <div className="flex flex-wrap gap-1">
-                      <Badge tone={delayed ? "warning" : meta.tone}>
-                        {delayed ? "Delayed" : meta.label}
-                      </Badge>
-                    </div>
-                  </button>
-                );
-              })}
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain sf-hide-scrollbar">
+              <table className="w-full table-fixed text-sm">
+                <colgroup>
+                  <col className="w-[30%]" />
+                  <col className="w-[24%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[14%]" />
+                  <col className="w-[20%]" />
+                </colgroup>
+                <thead className="sticky top-0 z-10 bg-white">
+                  <tr className="border-b-2 border-slate-800 text-left text-slate-500">
+                    <th className="py-2 pr-3 font-medium">Route</th>
+                    <th className="py-2 pr-3 font-medium">Assignment</th>
+                    <th className="py-2 pr-3 font-medium">Stops</th>
+                    <th className="py-2 pr-3 font-medium">Distance</th>
+                    <th className="py-2 font-medium">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((r) => {
+                    const meta =
+                      ROUTE_STATUS[r.routeStatus] ?? {
+                        label: r.routeStatus,
+                        tone: "neutral" as const,
+                      };
+                    const delayed = isRouteDelayed(r);
+                    return (
+                      <tr
+                        key={r.id}
+                        tabIndex={0}
+                        onClick={() => setSelected(r)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setSelected(r);
+                          }
+                        }}
+                        className="cursor-pointer border-b border-slate-50 last:border-0 hover:bg-tan-50/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tan-300 focus-visible:ring-inset"
+                      >
+                        <td className="py-3 pr-3 align-middle overflow-hidden">
+                          <p className="font-medium text-slate-900 truncate">
+                            {r.code} · {r.name}
+                          </p>
+                          <p className="text-xs text-slate-500 truncate">
+                            {r.corridor}
+                          </p>
+                        </td>
+                        <td className="py-3 pr-3 align-middle overflow-hidden">
+                          <p className="text-slate-700 truncate">
+                            {r.vehicleNumber ?? "—"}
+                          </p>
+                          <p className="text-xs text-slate-500 truncate">
+                            {r.driverName ?? "Unassigned"}
+                          </p>
+                        </td>
+                        <td className="py-3 pr-3 align-middle font-semibold tabular-nums whitespace-nowrap">
+                          {r.completedStops}/{r.totalStops}
+                        </td>
+                        <td className="py-3 pr-3 align-middle text-slate-700 tabular-nums whitespace-nowrap">
+                          {fmtKm(r.plannedDistanceKm)}
+                        </td>
+                        <td className="py-3 align-middle">
+                          <Badge
+                            tone={delayed ? "warning" : meta.tone}
+                            className="whitespace-nowrap"
+                          >
+                            {delayed ? "Delayed" : meta.label}
+                          </Badge>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           </Card>
-        </div>
-        <div className="xl:col-span-4 min-h-0 h-full overflow-hidden">
-          <RouteRunBoard routes={rows} onSelect={setSelected} />
-        </div>
       </div>
 
       <NewRouteFormOverlay

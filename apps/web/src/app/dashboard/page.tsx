@@ -92,6 +92,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!alertEvent?.id) return;
+    if (
+      String(alertEvent.alertType ?? "").toUpperCase().includes("GEOFENCE") ||
+      /geofence|restricted zone/i.test(alertEvent.alertMessage ?? "")
+    ) {
+      return;
+    }
     setAlerts((prev) => [
       alertEvent,
       ...prev.filter((a) => a.id !== alertEvent.id),

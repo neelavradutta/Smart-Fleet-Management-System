@@ -409,11 +409,19 @@ const drivers = [
 const alerts = [
   {
     id: randomUUID(),
-    alertType: "GEOFENCE_VIOLATION",
+    alertType: "BREAKDOWN",
     alertSeverity: "CRITICAL",
-    alertMessage: "TRK-001 entered Restricted Zone — Andheri",
+    alertMessage: "TRK-001 stopped with hazard lights — Andheri East",
     isResolved: false,
     createdAt: new Date().toISOString(),
+  },
+  {
+    id: randomUUID(),
+    alertType: "BREAKDOWN",
+    alertSeverity: "CRITICAL",
+    alertMessage: "TRK-009 reported engine fault on NH48",
+    isResolved: false,
+    createdAt: new Date(Date.now() - 180000).toISOString(),
   },
   {
     id: randomUUID(),
@@ -425,11 +433,35 @@ const alerts = [
   },
   {
     id: randomUUID(),
+    alertType: "DELAY",
+    alertSeverity: "WARNING",
+    alertMessage: "RT-1002 running 24 min behind planned end",
+    isResolved: false,
+    createdAt: new Date(Date.now() - 900000).toISOString(),
+  },
+  {
+    id: randomUUID(),
+    alertType: "FUEL_ANOMALY",
+    alertSeverity: "WARNING",
+    alertMessage: "VAN-014 fuel drop 18% in 12 minutes — idle",
+    isResolved: false,
+    createdAt: new Date(Date.now() - 1500000).toISOString(),
+  },
+  {
+    id: randomUUID(),
     alertType: "MAINTENANCE_DUE",
     alertSeverity: "INFO",
     alertMessage: "BIKE-07 oil change due in 3 days",
     isResolved: false,
     createdAt: new Date(Date.now() - 3600000).toISOString(),
+  },
+  {
+    id: randomUUID(),
+    alertType: "MAINTENANCE_DUE",
+    alertSeverity: "INFO",
+    alertMessage: "TRK-001 PUC expires in 12 days",
+    isResolved: false,
+    createdAt: new Date(Date.now() - 7200000).toISOString(),
   },
 ];
 
@@ -1193,7 +1225,15 @@ app.patch("/api/v1/drivers/:id", (req, res) => {
   if (!d) return res.status(404).json({ error: "Not found" });
   res.json({ data: d });
 });
-app.get("/api/v1/alerts", (_req, res) => res.json({ data: alerts }));
+app.get("/api/v1/alerts", (_req, res) =>
+  res.json({
+    data: alerts.filter(
+      (a) =>
+        !String(a.alertType ?? "").toUpperCase().includes("GEOFENCE") &&
+        !/geofence|restricted zone/i.test(String(a.alertMessage ?? "")),
+    ),
+  }),
+);
 app.get("/api/v1/geofences", (_req, res) => res.json({ data: geofences }));
 app.get("/api/v1/routes", (_req, res) => res.json({ data: routes }));
 app.post("/api/v1/routes", (req, res) => {

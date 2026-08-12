@@ -6,6 +6,7 @@ import { Card } from "@/components/common/Card";
 import { Badge } from "@/components/common/Badge";
 import { Button } from "@/components/common/Button";
 import { api } from "@/lib/api";
+import { cn } from "@/utils/cn";
 
 export type AlertItem = {
   id: string;
@@ -15,16 +16,28 @@ export type AlertItem = {
   isResolved: boolean;
 };
 
+export function isGeofenceAlert(a: AlertItem) {
+  const type = (a.alertType ?? "").toUpperCase();
+  const msg = a.alertMessage ?? "";
+  return (
+    type.includes("GEOFENCE") ||
+    /geofence|restricted zone/i.test(msg)
+  );
+}
+
 export function AlertsPanel({
   alerts,
   onResolved,
+  className,
 }: {
   alerts: AlertItem[];
   onResolved?: () => void;
+  className?: string;
 }) {
+  const visible = alerts.filter((a) => !isGeofenceAlert(a));
   return (
-    <Card accent="coral" className="h-full min-h-[380px] flex flex-col">
-      <div className="flex items-center gap-2 mb-4">
+    <Card accent="coral" className={cn("h-full min-h-[380px] flex flex-col", className)}>
+      <div className="flex items-center gap-2 mb-4 shrink-0">
         <motion.div
           animate={{ rotate: [0, -12, 12, 0] }}
           transition={{ repeat: Infinity, duration: 2.8, ease: "easeInOut" }}
@@ -35,15 +48,15 @@ export function AlertsPanel({
           Live Alerts
         </h3>
         <Badge tone="danger" pulse className="ml-auto">
-          {alerts.filter((a) => !a.isResolved).length} open
+          {visible.filter((a) => !a.isResolved).length} open
         </Badge>
       </div>
-      <div className="space-y-3 overflow-y-auto flex-1 pr-1">
-        {alerts.length === 0 ? (
+      <div className="space-y-3 overflow-y-auto flex-1 min-h-0 pr-1 sf-hide-scrollbar">
+        {visible.length === 0 ? (
           <p className="text-sm text-slate-500">No alerts — fleet calm.</p>
         ) : (
           <AnimatePresence initial={false}>
-            {alerts.slice(0, 12).map((a, idx) => (
+            {visible.map((a, idx) => (
               <motion.div
                 key={a.id}
                 layout

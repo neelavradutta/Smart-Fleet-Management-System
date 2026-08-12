@@ -13,7 +13,6 @@ import {
   Menu,
   Package,
   Route,
-  Shield,
   Truck,
   Users,
   X,
@@ -37,12 +36,6 @@ const links = [
     tint: "coral",
   },
   { href: "/dashboard/alerts", label: "Alerts", icon: Bell, tint: "pink" },
-  {
-    href: "/dashboard/geofences",
-    label: "Geofences",
-    icon: Shield,
-    tint: "lime",
-  },
   {
     href: "/dashboard/analytics",
     label: "Analytics",
@@ -209,7 +202,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const fillViewport =
     isMapPage ||
     pathname === "/dashboard/drivers" ||
-    pathname === "/dashboard/routes";
+    pathname === "/dashboard/routes" ||
+    pathname === "/dashboard/alerts";
 
   return (
     <div
