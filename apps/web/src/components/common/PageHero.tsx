@@ -58,6 +58,12 @@ const themes = {
     chip: "bg-fuchsia-200 text-fuchsia-900 border-fuchsia-300",
     blob: "bg-fuchsia-300/50",
   },
+  tan: {
+    wrap: "bg-tan-100 border-tan-200",
+    title: "text-tan-700",
+    chip: "bg-tan-700 text-tan-50 border-tan-700",
+    blob: "bg-tan-400/45",
+  },
 };
 
 export function PageHero({

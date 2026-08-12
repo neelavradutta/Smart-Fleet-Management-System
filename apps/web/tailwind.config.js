@@ -35,6 +35,18 @@ module.exports = {
           400: "#fb7185",
           500: "#f43f5e",
         },
+        tan: {
+          50: "#faf4ec",
+          100: "#f0e0cc",
+          200: "#e2c8a8",
+          300: "#d4b08a",
+          400: "#c1966c",
+          500: "#a67c52",
+          600: "#8f6840",
+          700: "#8b5a2b",
+          800: "#7a4e26",
+          900: "#6b4423",
+        },
         lilac: {
           50: "#f5f3ff",
           100: "#ede9fe",
@@ -59,6 +71,7 @@ module.exports = {
         mint: "0 12px 32px rgba(52, 211, 153, 0.18)",
         sun: "0 12px 32px rgba(251, 191, 36, 0.2)",
         coral: "0 12px 32px rgba(251, 113, 133, 0.18)",
+        tan: "0 12px 32px rgba(139, 90, 43, 0.22)",
       },
       transitionTimingFunction: {
         spring: "cubic-bezier(0.34, 1.56, 0.64, 1)",

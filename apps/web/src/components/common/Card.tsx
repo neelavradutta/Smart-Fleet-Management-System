@@ -14,6 +14,7 @@ type Accent =
   | "lime"
   | "teal"
   | "orange"
+  | "tan"
   | "none";
 
 type CardProps = React.HTMLAttributes<HTMLDivElement> & {
@@ -70,6 +71,11 @@ const accentStyles: Record<
     border: "border-orange-200",
     bar: "bg-orange-500",
     blob: "bg-orange-300",
+  },
+  tan: {
+    border: "border-tan-200 hover:shadow-tan",
+    bar: "bg-tan-700",
+    blob: "bg-tan-200",
   },
   none: {
     border: "border-slate-200/80",

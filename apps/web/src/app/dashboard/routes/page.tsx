@@ -66,44 +66,44 @@ export default function RoutesPage() {
   return (
     <div className="space-y-6">
       <PageHero
-        theme="sky"
+        theme="tan"
         title="Route optimizer"
         subtitle="Multi-stop VRP — OR-Tools or nearest-neighbor fallback."
       >
-        <Button onClick={optimize} disabled={loading}>
+        <Button variant="tan" onClick={optimize} disabled={loading}>
           {loading ? "Optimizing…" : "Optimize sample day"}
         </Button>
       </PageHero>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card accent="sky" hover>
-          <p className="text-sm text-slate-500">Routes</p>
-          <p className="font-display text-3xl font-bold text-sky-600">
+        <Card accent="tan" hover>
+          <p className="text-sm text-tan-600">Routes</p>
+          <p className="font-display text-3xl font-bold text-tan-700">
             {rows.length}
           </p>
         </Card>
-        <Card accent="mint" hover>
-          <p className="text-sm text-slate-500">Total distance</p>
-          <p className="font-display text-3xl font-bold text-emerald-600">
+        <Card accent="tan" hover>
+          <p className="text-sm text-tan-600">Total distance</p>
+          <p className="font-display text-3xl font-bold text-tan-700">
             {rows
               .reduce((s, r) => s + Number(r.plannedDistanceKm ?? 0), 0)
               .toFixed(1)}{" "}
-            <span className="text-base font-medium text-slate-500">km</span>
+            <span className="text-base font-medium text-tan-600">km</span>
           </p>
         </Card>
-        <Card accent="sun" hover>
-          <p className="text-sm text-slate-500">CO₂</p>
-          <p className="font-display text-3xl font-bold text-amber-600">
+        <Card accent="tan" hover>
+          <p className="text-sm text-tan-600">CO₂</p>
+          <p className="font-display text-3xl font-bold text-tan-700">
             {rows.reduce((s, r) => s + Number(r.co2Kg ?? 0), 0).toFixed(1)}{" "}
-            <span className="text-base font-medium text-slate-500">kg</span>
+            <span className="text-base font-medium text-tan-600">kg</span>
           </p>
         </Card>
       </div>
 
-      <Card accent="lilac" className="overflow-x-auto">
+      <Card accent="tan" className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-left text-slate-500 border-b">
+            <tr className="text-left text-tan-600 border-b border-tan-200">
               <th className="py-2">ID</th>
               <th className="py-2">Status</th>
               <th className="py-2">Stops</th>
@@ -113,14 +113,19 @@ export default function RoutesPage() {
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.id} className="border-b border-slate-50">
-                <td className="py-3 font-mono text-xs">{r.id.slice(0, 8)}</td>
+              <tr key={r.id} className="border-b border-tan-100">
+                <td className="py-3 font-mono text-xs text-tan-700">{r.id.slice(0, 8)}</td>
                 <td className="py-3">
-                  <Badge tone="info">{r.routeStatus}</Badge>
+                  <Badge
+                    tone="neutral"
+                    className="bg-tan-100 text-tan-700 border-tan-300"
+                  >
+                    {r.routeStatus}
+                  </Badge>
                 </td>
-                <td className="py-3">{r.totalStops}</td>
-                <td className="py-3">{r.plannedDistanceKm ?? "—"} km</td>
-                <td className="py-3 font-semibold">
+                <td className="py-3 text-tan-700">{r.totalStops}</td>
+                <td className="py-3 text-tan-700">{r.plannedDistanceKm ?? "—"} km</td>
+                <td className="py-3 font-semibold text-tan-700">
                   {r.optimizationScore ?? "—"}
                 </td>
               </tr>
