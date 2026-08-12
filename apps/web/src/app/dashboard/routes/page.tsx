@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { io } from "socket.io-client";
 import { useReducedMotion } from "framer-motion";
-import { Gauge, MapPin, Navigation, Plus, Route, Search } from "lucide-react";
+import { CalendarClock, Navigation, Plus, Route, Search } from "lucide-react";
 import { api } from "@/lib/api";
 import { Button } from "@/components/common/Button";
 import { Card } from "@/components/common/Card";
@@ -15,7 +15,6 @@ import { RouteDetailsOverlay } from "@/components/routes/RouteDetailsOverlay";
 import { RouteRunBoard } from "@/components/routes/RouteRunBoard";
 import {
   fmtKm,
-  fmtScore,
   isRouteDelayed,
   ROUTE_STATUS,
   type RouteDetails,
@@ -74,26 +73,12 @@ export default function RoutesPage() {
   }, [rows, search]);
 
   const metrics = useMemo(() => {
-    const active = rows.filter((r) => r.routeStatus === "ACTIVE");
-    const open = rows.filter(
-      (r) => r.routeStatus === "ACTIVE" || r.routeStatus === "PLANNED",
-    );
-    const stopsLeft = open.reduce(
-      (s, r) => s + Math.max(0, r.totalStops - r.completedStops),
-      0,
-    );
-    const plannedKm = rows.reduce((s, r) => s + Number(r.plannedDistanceKm ?? 0), 0);
-    const scored = rows.filter((r) => r.optimizationScore != null);
-    const avgOpt =
-      scored.length === 0
-        ? 0
-        : scored.reduce((s, r) => s + Number(r.optimizationScore), 0) /
-          scored.length;
+    const active = rows.filter((r) => r.routeStatus === "ACTIVE").length;
+    const upcoming = rows.filter((r) => r.routeStatus === "PLANNED").length;
     return {
-      active: active.length,
-      stopsLeft,
-      plannedKm: Math.round(plannedKm),
-      avgOpt,
+      total: rows.length,
+      active,
+      upcoming,
     };
   }, [rows]);
 
@@ -105,14 +90,14 @@ export default function RoutesPage() {
         subtitle="Multi-stop VRP — OR-Tools or nearest-neighbor fallback."
       />
 
-      <div className="grid shrink-0 grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid shrink-0 grid-cols-3 gap-3">
         <LiveMetricTile
-          label="Active routes"
-          icon={Navigation}
+          label="Total routes"
+          icon={Route}
           iconTint="bg-tan-100 text-tan-700"
           bumpClass="bg-tan-700"
           bumpDownClass="bg-tan-800"
-          base={metrics.active}
+          base={metrics.total}
           active
           reduce={reduce}
           intervalMs={6400}
@@ -124,46 +109,29 @@ export default function RoutesPage() {
           formatBump={(d) => `${d > 0 ? "+" : ""}${d}`}
         />
         <LiveMetricTile
-          label="Stops remaining"
-          icon={MapPin}
-          iconTint="bg-tan-100 text-tan-700"
-          bumpClass="bg-tan-700"
-          bumpDownClass="bg-tan-800"
-          base={metrics.stopsLeft}
+          label="Active routes"
+          icon={Navigation}
+          iconTint="bg-emerald-50 text-emerald-600"
+          bumpClass="bg-emerald-500"
+          bumpDownClass="bg-emerald-700"
+          base={metrics.active}
           active
           reduce={reduce}
           intervalMs={5600}
           firstDelayMs={3000}
           deltaMin={-1}
-          deltaMax={2}
+          deltaMax={1}
           min={0}
           formatValue={(n) => String(n)}
           formatBump={(d) => `${d > 0 ? "+" : ""}${d}`}
         />
         <LiveMetricTile
-          label="Planned km"
-          icon={Route}
-          iconTint="bg-tan-100 text-tan-700"
-          bumpClass="bg-tan-700"
-          bumpDownClass="bg-tan-800"
-          base={metrics.plannedKm}
-          active
-          reduce={reduce}
-          intervalMs={5000}
-          firstDelayMs={2400}
-          deltaMin={-4}
-          deltaMax={8}
-          min={0}
-          formatValue={(n) => n.toLocaleString("en-IN")}
-          formatBump={(d) => `${d > 0 ? "+" : ""}${d}`}
-        />
-        <LiveMetricTile
-          label="Avg optimization"
-          icon={Gauge}
-          iconTint="bg-tan-100 text-tan-700"
-          bumpClass="bg-tan-700"
-          bumpDownClass="bg-tan-800"
-          base={metrics.avgOpt}
+          label="Upcoming routes"
+          icon={CalendarClock}
+          iconTint="bg-sky-50 text-sky-600"
+          bumpClass="bg-sky-500"
+          bumpDownClass="bg-sky-700"
+          base={metrics.upcoming}
           active
           reduce={reduce}
           intervalMs={5200}
@@ -171,8 +139,7 @@ export default function RoutesPage() {
           deltaMin={-1}
           deltaMax={1}
           min={0}
-          max={100}
-          formatValue={(n) => fmtScore(n)}
+          formatValue={(n) => String(n)}
           formatBump={(d) => `${d > 0 ? "+" : ""}${d}`}
         />
       </div>
