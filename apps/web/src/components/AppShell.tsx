@@ -207,7 +207,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const isMapPage = pathname === "/dashboard/map";
   const fillViewport =
-    isMapPage || pathname === "/dashboard/drivers";
+    isMapPage ||
+    pathname === "/dashboard/drivers" ||
+    pathname === "/dashboard/routes";
 
   return (
     <div
