@@ -108,6 +108,7 @@ export default function DriversPage() {
           min={0}
           formatValue={(n) => String(n)}
           formatBump={(d) => `${d > 0 ? "+" : ""}${d}`}
+          fx="polished"
         />
         <LiveMetricTile
           label="Trips Today"
@@ -125,9 +126,10 @@ export default function DriversPage() {
           min={0}
           formatValue={(n) => String(n)}
           formatBump={(d) => `${d > 0 ? "+" : ""}${d}`}
+          fx="polished"
         />
         <LiveMetricTile
-          label="Total Miles"
+          label="Total Kilometers"
           icon={Route}
           iconTint="bg-sky-50 text-sky-600"
           bumpClass="bg-sky-500"
@@ -140,8 +142,9 @@ export default function DriversPage() {
           deltaMin={-3}
           deltaMax={8}
           min={0}
-          formatValue={(n) => `${n.toLocaleString("en-IN")} mi`}
-          formatBump={(d) => `${d > 0 ? "+" : ""}${d} mi`}
+          formatValue={(n) => n.toLocaleString("en-IN")}
+          formatBump={(d) => `${d > 0 ? "+" : ""}${d}`}
+          fx="polished"
         />
         <LiveMetricTile
           label="Average Safety Score"
@@ -160,6 +163,7 @@ export default function DriversPage() {
           max={100}
           formatValue={(n) => `${n}`}
           formatBump={(d) => `${d > 0 ? "+" : ""}${d}`}
+          fx="polished"
         />
       </div>
 
