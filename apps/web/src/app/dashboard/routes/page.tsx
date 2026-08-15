@@ -18,6 +18,10 @@ import {
   ROUTE_STATUS,
   type RouteDetails,
 } from "@/components/routes/types";
+import { cn } from "@/utils/cn";
+
+const BOARD_COLS =
+  "grid grid-cols-[minmax(0,1.5fr)_minmax(0,1.2fr)_minmax(0,0.55fr)_minmax(0,0.7fr)_minmax(0,0.9fr)]";
 
 export default function RoutesPage() {
   const [rows, setRows] = useState<RouteDetails[]>([]);
@@ -190,46 +194,20 @@ export default function RoutesPage() {
                 </Button>
               </div>
             </div>
-            <div className="flex min-h-0 flex-1 flex-col">
-              <table className="w-full table-fixed border-separate border-spacing-0 text-sm shrink-0">
-                <colgroup>
-                  <col className="w-[30%]" />
-                  <col className="w-[24%]" />
-                  <col className="w-[12%]" />
-                  <col className="w-[14%]" />
-                  <col className="w-[20%]" />
-                </colgroup>
-                <thead>
-                  <tr className="text-left text-slate-500">
-                    <th className="bg-white py-2 pr-3 font-medium border-b-2 border-slate-800">
-                      Route
-                    </th>
-                    <th className="bg-white py-2 pr-3 font-medium border-b-2 border-slate-800">
-                      Assignment
-                    </th>
-                    <th className="bg-white py-2 pr-3 font-medium border-b-2 border-slate-800">
-                      Stops
-                    </th>
-                    <th className="bg-white py-2 pr-3 font-medium border-b-2 border-slate-800">
-                      Distance
-                    </th>
-                    <th className="bg-white py-2 font-medium border-b-2 border-slate-800">
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-              </table>
-              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain sf-hide-scrollbar">
-              <table className="w-full table-fixed border-separate border-spacing-0 text-sm">
-                <colgroup>
-                  <col className="w-[30%]" />
-                  <col className="w-[24%]" />
-                  <col className="w-[12%]" />
-                  <col className="w-[14%]" />
-                  <col className="w-[20%]" />
-                </colgroup>
-                <tbody>
-                  {filtered.map((r) => {
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain sf-hide-scrollbar">
+              <div
+                className={cn(
+                  BOARD_COLS,
+                  "sticky top-0 z-10 bg-white text-left text-sm font-medium text-slate-500 border-b-2 border-slate-800",
+                )}
+              >
+                <div className="py-2 pr-3">Route</div>
+                <div className="py-2 pr-3">Assignment</div>
+                <div className="py-2 pr-3">Stops</div>
+                <div className="py-2 pr-3">Distance</div>
+                <div className="py-2">Status</div>
+              </div>
+              {filtered.map((r) => {
                     const meta =
                       ROUTE_STATUS[r.routeStatus] ?? {
                         label: r.routeStatus,
@@ -237,8 +215,9 @@ export default function RoutesPage() {
                       };
                     const delayed = isRouteDelayed(r);
                     return (
-                      <tr
+                      <div
                         key={r.id}
+                        role="button"
                         tabIndex={0}
                         onClick={() => setSelected(r)}
                         onKeyDown={(e) => {
@@ -247,44 +226,44 @@ export default function RoutesPage() {
                             setSelected(r);
                           }
                         }}
-                        className="cursor-pointer border-b border-slate-50 last:border-0 hover:bg-tan-50/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tan-300 focus-visible:ring-inset"
+                        className={cn(
+                          BOARD_COLS,
+                          "cursor-pointer items-center border-b border-slate-50 last:border-0 text-sm hover:bg-tan-50/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tan-300 focus-visible:ring-inset",
+                        )}
                       >
-                        <td className="py-3 pr-3 align-middle overflow-hidden">
+                        <div className="py-3 pr-3 min-w-0">
                           <p className="font-medium text-slate-900 truncate">
                             {r.code} · {r.name}
                           </p>
                           <p className="text-xs text-slate-500 truncate">
                             {r.corridor}
                           </p>
-                        </td>
-                        <td className="py-3 pr-3 align-middle overflow-hidden">
+                        </div>
+                        <div className="py-3 pr-3 min-w-0">
                           <p className="text-slate-700 truncate">
                             {r.vehicleNumber ?? "—"}
                           </p>
                           <p className="text-xs text-slate-500 truncate">
                             {r.driverName ?? "Unassigned"}
                           </p>
-                        </td>
-                        <td className="py-3 pr-3 align-middle font-semibold tabular-nums whitespace-nowrap">
+                        </div>
+                        <div className="py-3 pr-3 font-semibold tabular-nums whitespace-nowrap text-left">
                           {r.completedStops}/{r.totalStops}
-                        </td>
-                        <td className="py-3 pr-3 align-middle text-slate-700 tabular-nums whitespace-nowrap">
+                        </div>
+                        <div className="py-3 pr-3 text-slate-700 tabular-nums whitespace-nowrap text-left">
                           {fmtKm(r.plannedDistanceKm)}
-                        </td>
-                        <td className="py-3 align-middle">
+                        </div>
+                        <div className="py-3 text-left">
                           <Badge
                             tone={delayed ? "warning" : meta.tone}
                             className="whitespace-nowrap"
                           >
                             {delayed ? "Delayed" : meta.label}
                           </Badge>
-                        </td>
-                      </tr>
+                        </div>
+                      </div>
                     );
                   })}
-                </tbody>
-              </table>
-              </div>
             </div>
           </Card>
       </div>
