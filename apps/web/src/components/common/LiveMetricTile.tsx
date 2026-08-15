@@ -47,6 +47,8 @@ export function LiveMetricTile({
   min = Number.NEGATIVE_INFINITY,
   max = Number.POSITIVE_INFINITY,
   fx = "classic",
+  hoverBar,
+  hoverFilm,
 }: {
   label: string;
   icon: LucideIcon;
@@ -65,6 +67,8 @@ export function LiveMetricTile({
   min?: number;
   max?: number;
   fx?: "classic" | "polished";
+  hoverBar?: string;
+  hoverFilm?: string;
 }) {
   const polished = fx === "polished";
   const [target, setTarget] = useState(base);
@@ -172,20 +176,46 @@ export function LiveMetricTile({
   const down = (bump?.delta ?? 0) < 0;
 
   if (!polished) {
+    const hoverFx = Boolean(hoverBar || hoverFilm);
     return (
-      <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-center">
+      <div className={cn(hoverFx && "group")}>
         <div
           className={cn(
-            "mx-auto mb-2 grid h-8 w-8 place-items-center rounded-xl",
+            "relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-center",
+            hoverFx &&
+              "transition-transform duration-200 ease-out group-hover:-translate-y-1",
+          )}
+        >
+        {hoverFilm ? (
+          <span
+            aria-hidden
+            className={cn(
+              "pointer-events-none absolute inset-y-0 left-0 z-0 w-0 transition-[width] duration-200 ease-out group-hover:w-full",
+              hoverFilm,
+            )}
+          />
+        ) : null}
+        {hoverBar ? (
+          <span
+            aria-hidden
+            className={cn(
+              "pointer-events-none absolute top-0 left-0 z-10 h-[3px] w-0 rounded-r-full transition-[width] duration-200 ease-out group-hover:w-full",
+              hoverBar,
+            )}
+          />
+        ) : null}
+        <div
+          className={cn(
+            "relative z-10 mx-auto mb-2 grid h-8 w-8 place-items-center rounded-xl",
             iconTint,
           )}
         >
           <Icon size={15} />
         </div>
-        <p className="text-[11px] uppercase tracking-wide text-slate-800">
+        <p className="relative z-10 text-[11px] uppercase tracking-wide text-slate-800">
           {label}
         </p>
-        <motion.p className="text-lg font-semibold text-slate-900 leading-tight tabular-nums">
+        <motion.p className="relative z-10 text-lg font-semibold text-slate-900 leading-tight tabular-nums">
           {display}
         </motion.p>
 
@@ -201,7 +231,7 @@ export function LiveMetricTile({
                 setBump((cur) => (cur?.id === bump.id ? null : cur))
               }
               className={cn(
-                "pointer-events-none absolute right-2 top-9 rounded-full px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm",
+                "pointer-events-none absolute right-2 top-9 z-20 rounded-full px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm",
                 down ? (bumpDownClass ?? bumpClass) : bumpClass,
               )}
             >
@@ -209,12 +239,40 @@ export function LiveMetricTile({
             </motion.span>
           ) : null}
         </AnimatePresence>
+        </div>
       </div>
     );
   }
 
+  const hoverFx = Boolean(hoverBar || hoverFilm);
+
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-center">
+    <div className={cn(hoverFx && "group")}>
+      <div
+        className={cn(
+          "relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-50/70 p-3 text-center",
+          hoverFx &&
+            "transition-transform duration-200 ease-out group-hover:-translate-y-1",
+        )}
+      >
+      {hoverFilm ? (
+        <span
+          aria-hidden
+          className={cn(
+            "pointer-events-none absolute inset-y-0 left-0 z-0 w-0 transition-[width] duration-200 ease-out group-hover:w-full",
+            hoverFilm,
+          )}
+        />
+      ) : null}
+      {hoverBar ? (
+        <span
+          aria-hidden
+          className={cn(
+            "pointer-events-none absolute top-0 left-0 z-10 h-[3px] w-0 rounded-r-full transition-[width] duration-200 ease-out group-hover:w-full",
+            hoverBar,
+          )}
+        />
+      ) : null}
       <AnimatePresence>
         {bump && !reduce ? (
           <motion.span
@@ -225,7 +283,7 @@ export function LiveMetricTile({
             exit={{ opacity: 0 }}
             transition={{ duration: BUMP_S, ease: "easeOut" }}
             className={cn(
-              "pointer-events-none absolute inset-0 rounded-2xl blur-md",
+              "pointer-events-none absolute inset-0 z-[1] rounded-2xl blur-md",
               down
                 ? "bg-gradient-to-br from-rose-200/70 via-transparent to-transparent"
                 : "bg-gradient-to-br from-emerald-200/70 via-transparent to-transparent",
@@ -243,7 +301,7 @@ export function LiveMetricTile({
             animate={{ x: "120%" }}
             exit={{ opacity: 0 }}
             transition={{ duration: BUMP_S, ease: [0.22, 1, 0.36, 1] }}
-            className="pointer-events-none absolute inset-y-0 w-1/2 -skew-x-12 bg-gradient-to-r from-transparent via-white/70 to-transparent"
+            className="pointer-events-none absolute inset-y-0 z-[1] w-1/2 -skew-x-12 bg-gradient-to-r from-transparent via-white/70 to-transparent"
           />
         ) : null}
       </AnimatePresence>
@@ -256,13 +314,13 @@ export function LiveMetricTile({
         }
         transition={{ duration: BUMP_S * 0.45, ease: [0.34, 1.56, 0.64, 1] }}
         className={cn(
-          "relative mx-auto mb-2 grid h-8 w-8 place-items-center rounded-xl",
+          "relative z-10 mx-auto mb-2 grid h-8 w-8 place-items-center rounded-xl",
           iconTint,
         )}
       >
         <Icon size={15} />
       </motion.div>
-      <p className="relative text-[11px] uppercase tracking-wide text-slate-800">
+      <p className="relative z-10 text-[11px] uppercase tracking-wide text-slate-800">
         {label}
       </p>
       <motion.p
@@ -275,7 +333,7 @@ export function LiveMetricTile({
             : { scale: 1, color: "#0f172a" }
         }
         transition={{ duration: BUMP_S, ease: [0.22, 1, 0.36, 1] }}
-        className="relative text-lg font-semibold leading-tight tabular-nums"
+        className="relative z-10 text-lg font-semibold leading-tight tabular-nums"
       >
         {display}
       </motion.p>
@@ -298,7 +356,7 @@ export function LiveMetricTile({
               ease: [0.22, 1, 0.36, 1],
             }}
             className={cn(
-              "pointer-events-none absolute right-1.5 top-8 inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-bold text-white shadow-lg ring-1 ring-white/40 backdrop-blur-[1px]",
+              "pointer-events-none absolute right-1.5 top-8 z-20 inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-xs font-bold text-white shadow-lg ring-1 ring-white/40 backdrop-blur-[1px]",
               down ? (bumpDownClass ?? bumpClass) : bumpClass,
             )}
           >
@@ -315,6 +373,7 @@ export function LiveMetricTile({
           </motion.span>
         ) : null}
       </AnimatePresence>
+      </div>
     </div>
   );
 }

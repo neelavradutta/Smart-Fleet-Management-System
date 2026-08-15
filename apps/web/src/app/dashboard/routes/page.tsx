@@ -93,9 +93,9 @@ export default function RoutesPage() {
         <LiveMetricTile
           label="Total routes"
           icon={Route}
-          iconTint="bg-tan-100 text-tan-700"
-          bumpClass="bg-tan-700"
-          bumpDownClass="bg-tan-800"
+          iconTint="bg-amber-100 text-amber-800"
+          bumpClass="bg-amber-500"
+          bumpDownClass="bg-amber-700"
           base={metrics.total}
           active
           reduce={reduce}
@@ -106,6 +106,8 @@ export default function RoutesPage() {
           min={0}
           formatValue={(n) => String(n)}
           formatBump={(d) => `${d > 0 ? "+" : ""}${d}`}
+          hoverBar="bg-amber-500"
+          hoverFilm="bg-amber-100/80"
         />
         <LiveMetricTile
           label="Active routes"
@@ -123,6 +125,8 @@ export default function RoutesPage() {
           min={0}
           formatValue={(n) => String(n)}
           formatBump={(d) => `${d > 0 ? "+" : ""}${d}`}
+          hoverBar="bg-emerald-500"
+          hoverFilm="bg-emerald-100/80"
         />
         <LiveMetricTile
           label="Upcoming routes"
@@ -140,6 +144,8 @@ export default function RoutesPage() {
           min={0}
           formatValue={(n) => String(n)}
           formatBump={(d) => `${d > 0 ? "+" : ""}${d}`}
+          hoverBar="bg-sky-500"
+          hoverFilm="bg-sky-100/80"
         />
       </div>
 
@@ -181,8 +187,8 @@ export default function RoutesPage() {
                 </Button>
               </div>
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain sf-hide-scrollbar">
-              <table className="w-full table-fixed text-sm">
+            <div className="flex min-h-0 flex-1 flex-col">
+              <table className="w-full table-fixed border-separate border-spacing-0 text-sm shrink-0">
                 <colgroup>
                   <col className="w-[30%]" />
                   <col className="w-[24%]" />
@@ -190,15 +196,35 @@ export default function RoutesPage() {
                   <col className="w-[14%]" />
                   <col className="w-[20%]" />
                 </colgroup>
-                <thead className="sticky top-0 z-10 bg-white">
-                  <tr className="border-b-2 border-slate-800 text-left text-slate-500">
-                    <th className="py-2 pr-3 font-medium">Route</th>
-                    <th className="py-2 pr-3 font-medium">Assignment</th>
-                    <th className="py-2 pr-3 font-medium">Stops</th>
-                    <th className="py-2 pr-3 font-medium">Distance</th>
-                    <th className="py-2 font-medium">Status</th>
+                <thead>
+                  <tr className="text-left text-slate-500">
+                    <th className="bg-white py-2 pr-3 font-medium border-b-2 border-slate-800">
+                      Route
+                    </th>
+                    <th className="bg-white py-2 pr-3 font-medium border-b-2 border-slate-800">
+                      Assignment
+                    </th>
+                    <th className="bg-white py-2 pr-3 font-medium border-b-2 border-slate-800">
+                      Stops
+                    </th>
+                    <th className="bg-white py-2 pr-3 font-medium border-b-2 border-slate-800">
+                      Distance
+                    </th>
+                    <th className="bg-white py-2 font-medium border-b-2 border-slate-800">
+                      Status
+                    </th>
                   </tr>
                 </thead>
+              </table>
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain sf-hide-scrollbar">
+              <table className="w-full table-fixed border-separate border-spacing-0 text-sm">
+                <colgroup>
+                  <col className="w-[30%]" />
+                  <col className="w-[24%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[14%]" />
+                  <col className="w-[20%]" />
+                </colgroup>
                 <tbody>
                   {filtered.map((r) => {
                     const meta =
@@ -255,6 +281,7 @@ export default function RoutesPage() {
                   })}
                 </tbody>
               </table>
+              </div>
             </div>
           </Card>
       </div>

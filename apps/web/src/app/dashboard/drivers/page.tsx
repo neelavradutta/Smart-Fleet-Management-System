@@ -95,9 +95,9 @@ export default function DriversPage() {
         <LiveMetricTile
           label="Total Drivers"
           icon={Users}
-          iconTint="bg-violet-50 text-violet-600"
-          bumpClass="bg-violet-500"
-          bumpDownClass="bg-violet-700"
+          iconTint="bg-amber-100 text-amber-800"
+          bumpClass="bg-amber-500"
+          bumpDownClass="bg-amber-700"
           base={metrics.totalDrivers}
           active
           reduce={reduce}
@@ -109,6 +109,8 @@ export default function DriversPage() {
           formatValue={(n) => String(n)}
           formatBump={(d) => `${d > 0 ? "+" : ""}${d}`}
           fx="polished"
+          hoverBar="bg-amber-500"
+          hoverFilm="bg-amber-100/80"
         />
         <LiveMetricTile
           label="Trips Today"
@@ -127,6 +129,8 @@ export default function DriversPage() {
           formatValue={(n) => String(n)}
           formatBump={(d) => `${d > 0 ? "+" : ""}${d}`}
           fx="polished"
+          hoverBar="bg-emerald-500"
+          hoverFilm="bg-emerald-100/80"
         />
         <LiveMetricTile
           label="Total Kilometers"
@@ -145,6 +149,8 @@ export default function DriversPage() {
           formatValue={(n) => n.toLocaleString("en-IN")}
           formatBump={(d) => `${d > 0 ? "+" : ""}${d}`}
           fx="polished"
+          hoverBar="bg-sky-500"
+          hoverFilm="bg-sky-100/80"
         />
         <LiveMetricTile
           label="Average Safety Score"
@@ -164,6 +170,8 @@ export default function DriversPage() {
           formatValue={(n) => `${n}`}
           formatBump={(d) => `${d > 0 ? "+" : ""}${d}`}
           fx="polished"
+          hoverBar="bg-rose-500"
+          hoverFilm="bg-rose-100/80"
         />
       </div>
 

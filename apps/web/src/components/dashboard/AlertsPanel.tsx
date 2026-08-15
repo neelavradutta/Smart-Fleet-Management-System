@@ -290,14 +290,14 @@ export function AlertsPanel({
                         ease: [0.4, 0, 0.2, 1],
                       },
                     }}
-                    className="relative"
+                    className="group relative"
                   >
                     <div
                       className={cn(
-                        "group relative overflow-hidden",
+                        "relative overflow-hidden",
                         !busy &&
                           !resolving &&
-                          "transition-transform duration-200 ease-out hover:-translate-y-1",
+                          "transition-transform duration-200 ease-out group-hover:-translate-y-1",
                         chrome.card,
                       )}
                     >
