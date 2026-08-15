@@ -7,7 +7,6 @@ import { Badge } from "@/components/common/Badge";
 import { Button } from "@/components/common/Button";
 import { api } from "@/lib/api";
 import { cn } from "@/utils/cn";
-import { hoverLift } from "@/lib/motion";
 
 export type AlertItem = {
   id: string;
@@ -127,49 +126,50 @@ export function AlertsPanel({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            className="space-y-3"
+            className="space-y-3 pt-2 pb-1"
           >
             {visible.map((a) => {
               const chrome = alertChrome(a);
               return (
-                <motion.div
+                <div
                   key={a.id}
-                  className={cn("group relative overflow-hidden", chrome.card)}
-                  {...hoverLift}
+                  className="group relative transition-transform duration-200 ease-out hover:-translate-y-1"
                 >
-                  <span
-                    aria-hidden
-                    className={cn(
-                      "pointer-events-none absolute top-0 left-0 h-[3px] w-full origin-left scale-x-0 rounded-full transition-transform duration-200 ease-out group-hover:scale-x-100",
-                      chrome.bar,
+                  <div className={cn("relative overflow-hidden", chrome.card)}>
+                    <span
+                      aria-hidden
+                      className={cn(
+                        "pointer-events-none absolute top-0 left-0 z-10 h-[3px] w-0 rounded-r-full transition-[width] duration-200 ease-out group-hover:w-full",
+                        chrome.bar,
+                      )}
+                    />
+                    <div className="flex items-center gap-2 mb-1">
+                      <Badge tone={chrome.badgeTone} className={chrome.badgeClass}>
+                        {a.alertSeverity}
+                      </Badge>
+                      <span className={chrome.typeClass}>{a.alertType}</span>
+                    </div>
+                    <p className="text-sm text-slate-800 mb-2">{a.alertMessage}</p>
+                    {!a.isResolved ? (
+                      <Button
+                        size="sm"
+                        variant={chrome.buttonVariant}
+                        className={chrome.buttonClass}
+                        onClick={() =>
+                          api(`/api/v1/alerts/${a.id}/resolve`, {
+                            method: "PATCH",
+                          }).then(() => onResolved?.())
+                        }
+                      >
+                        Resolve
+                      </Button>
+                    ) : (
+                      <span className="text-xs text-emerald-600 font-medium">
+                        Resolved
+                      </span>
                     )}
-                  />
-                  <div className="flex items-center gap-2 mb-1">
-                    <Badge tone={chrome.badgeTone} className={chrome.badgeClass}>
-                      {a.alertSeverity}
-                    </Badge>
-                    <span className={chrome.typeClass}>{a.alertType}</span>
                   </div>
-                  <p className="text-sm text-slate-800 mb-2">{a.alertMessage}</p>
-                  {!a.isResolved ? (
-                    <Button
-                      size="sm"
-                      variant={chrome.buttonVariant}
-                      className={chrome.buttonClass}
-                      onClick={() =>
-                        api(`/api/v1/alerts/${a.id}/resolve`, {
-                          method: "PATCH",
-                        }).then(() => onResolved?.())
-                      }
-                    >
-                      Resolve
-                    </Button>
-                  ) : (
-                    <span className="text-xs text-emerald-600 font-medium">
-                      Resolved
-                    </span>
-                  )}
-                </motion.div>
+                </div>
               );
             })}
           </motion.div>
