@@ -203,7 +203,7 @@ export function AlertsPanel({
                 return next;
               });
               onResolved?.();
-            }, 900);
+            }, 1350);
             timers.current.push(sync);
           }, 1000);
           timers.current.push(hide);
@@ -245,7 +245,7 @@ export function AlertsPanel({
           <p className="text-sm text-slate-500">No alerts — fleet calm.</p>
         ) : (
           <div className="flex flex-col gap-3 pt-2 pb-1">
-            <AnimatePresence initial={false} mode="popLayout">
+            <AnimatePresence initial={false}>
               {visible.map((a) => {
                 const chrome = alertChrome(a);
                 const status = phase[a.id];
@@ -253,7 +253,7 @@ export function AlertsPanel({
                 return (
                   <motion.div
                     key={a.id}
-                    layout="position"
+                    layout
                     initial={false}
                     exit={
                       resolving
@@ -286,10 +286,8 @@ export function AlertsPanel({
                     transition={{
                       layout: {
                         type: "tween",
-                        duration: resolving ? 0.9 : 0.22,
-                        ease: resolving
-                          ? [0.4, 0, 0.2, 1]
-                          : [0.22, 1, 0.36, 1],
+                        duration: resolving ? 0.45 : 0.22,
+                        ease: [0.4, 0, 0.2, 1],
                       },
                     }}
                     className="relative"
@@ -298,6 +296,7 @@ export function AlertsPanel({
                       className={cn(
                         "group relative overflow-hidden",
                         !busy &&
+                          !resolving &&
                           "transition-transform duration-200 ease-out hover:-translate-y-1",
                         chrome.card,
                       )}
