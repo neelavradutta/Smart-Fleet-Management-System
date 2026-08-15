@@ -24,29 +24,68 @@ import { PageTransition } from "@/components/common/PageTransition";
 import { cn } from "@/utils/cn";
 
 const links = [
-  { href: "/dashboard", label: "Overview", icon: LayoutDashboard, tint: "sky" },
-  { href: "/dashboard/map", label: "Live map", icon: MapIcon, tint: "mint" },
-  { href: "/dashboard/vehicles", label: "Vehicles", icon: Truck, tint: "sun" },
-  { href: "/dashboard/drivers", label: "Drivers", icon: Users, tint: "lilac" },
-  { href: "/dashboard/routes", label: "Routes", icon: Route, tint: "tan" },
+  {
+    href: "/dashboard",
+    label: "Overview",
+    icon: LayoutDashboard,
+    tint: "sky",
+    anim: "dash",
+  },
+  {
+    href: "/dashboard/map",
+    label: "Live map",
+    icon: MapIcon,
+    tint: "mint",
+    anim: "map",
+  },
+  {
+    href: "/dashboard/vehicles",
+    label: "Vehicles",
+    icon: Truck,
+    tint: "sun",
+    anim: "truck",
+  },
+  {
+    href: "/dashboard/drivers",
+    label: "Drivers",
+    icon: Users,
+    tint: "lilac",
+    anim: "users",
+  },
+  {
+    href: "/dashboard/routes",
+    label: "Routes",
+    icon: Route,
+    tint: "tan",
+    anim: "route",
+  },
   {
     href: "/dashboard/shipments",
     label: "Shipments",
     icon: Package,
     tint: "lime",
+    anim: "package",
   },
-  { href: "/dashboard/alerts", label: "Alerts", icon: Bell, tint: "coral" },
+  {
+    href: "/dashboard/alerts",
+    label: "Alerts",
+    icon: Bell,
+    tint: "coral",
+    anim: "bell",
+  },
   {
     href: "/dashboard/analytics",
     label: "Analytics",
     icon: Activity,
     tint: "orange",
+    anim: "pulse",
   },
   {
     href: "/dashboard/documents",
     label: "Documents",
     icon: FileText,
     tint: "fuchsia",
+    anim: "file",
   },
 ];
 
@@ -157,7 +196,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           const Icon = link.icon;
           const active = pathname === link.href;
           return (
-            <Link key={link.href} href={link.href} className="relative">
+            <Link key={link.href} href={link.href} className="group relative">
               {active ? (
                 <motion.span
                   layoutId="nav-pill"
@@ -168,18 +207,78 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   transition={{ type: "spring", stiffness: 380, damping: 30 }}
                 />
               ) : null}
-              <motion.span
-                whileHover={{ x: 4, scale: 1.01 }}
+              <span
                 className={cn(
                   "relative z-10 flex items-center gap-3 px-2.5 py-2 rounded-xl text-sm font-medium",
                   active ? tintMap[link.tint] : "text-slate-700 hover:bg-slate-50",
                 )}
               >
-                <span className={cn("sf-icon-tile w-8 h-8", iconTile[link.tint])}>
-                  <Icon size={16} />
+                <span
+                  className={cn(
+                    "sf-icon-tile w-8 h-8",
+                    iconTile[link.tint],
+                    link.anim === "truck" && "overflow-hidden",
+                  )}
+                >
+                  {link.anim === "dash" ? (
+                    <span className="sf-nav-dash" aria-hidden>
+                      <span className="sf-nav-dash__arm">
+                        <span className="sf-nav-dash__tile sf-nav-dash__tile--1" />
+                      </span>
+                      <span className="sf-nav-dash__arm">
+                        <span className="sf-nav-dash__tile sf-nav-dash__tile--2" />
+                      </span>
+                      <span className="sf-nav-dash__arm">
+                        <span className="sf-nav-dash__tile sf-nav-dash__tile--3" />
+                      </span>
+                      <span className="sf-nav-dash__arm">
+                        <span className="sf-nav-dash__tile sf-nav-dash__tile--4" />
+                      </span>
+                    </span>
+                  ) : link.anim === "route" ? (
+                    <svg
+                      className="sf-nav-route"
+                      viewBox="0 0 24 24"
+                      width="16"
+                      height="16"
+                      fill="none"
+                      aria-hidden
+                    >
+                      <circle
+                        className="sf-nav-route__dot"
+                        cx="6"
+                        cy="19"
+                        r="3"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      />
+                      <path
+                        className="sf-nav-route__rope"
+                        pathLength="1"
+                        d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                      <circle
+                        className="sf-nav-route__dot"
+                        cx="18"
+                        cy="5"
+                        r="3"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      />
+                    </svg>
+                  ) : (
+                    <Icon
+                      size={16}
+                      className={cn("sf-nav-ico", `sf-nav-ico--${link.anim}`)}
+                    />
+                  )}
                 </span>
                 {link.label}
-              </motion.span>
+              </span>
             </Link>
           );
         })}
