@@ -33,9 +33,9 @@ const links = [
     href: "/dashboard/shipments",
     label: "Shipments",
     icon: Package,
-    tint: "coral",
+    tint: "lime",
   },
-  { href: "/dashboard/alerts", label: "Alerts", icon: Bell, tint: "pink" },
+  { href: "/dashboard/alerts", label: "Alerts", icon: Bell, tint: "coral" },
   {
     href: "/dashboard/analytics",
     label: "Analytics",

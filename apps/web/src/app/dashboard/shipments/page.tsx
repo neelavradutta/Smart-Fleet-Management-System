@@ -105,17 +105,17 @@ export default function ShipmentsPage() {
   return (
     <div className="space-y-6">
       <PageHero
-        theme="coral"
+        theme="lime"
         title="Shipments"
         subtitle="Create, advance status — track opens as a soft overlay."
       />
 
-      <Card accent="coral">
+      <Card accent="lime">
         <form onSubmit={onCreate} className="flex flex-wrap gap-3 items-end">
           <label className="flex-1 min-w-[200px]">
             <span className="text-sm font-medium text-slate-700">Customer</span>
             <input
-              className="mt-1 w-full rounded-xl border-rose-200 bg-rose-50/40 focus:border-rose-400 focus:ring-rose-400"
+              className="mt-1 w-full rounded-xl border-lime-200 bg-lime-50/40 focus:border-lime-400 focus:ring-lime-400"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
               required
@@ -141,11 +141,11 @@ export default function ShipmentsPage() {
             >
               <Card
                 hover
-                accent="coral"
+                accent="lime"
                 className="flex flex-wrap items-center justify-between gap-4"
               >
                 <div className="min-w-[180px] flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-rose-100 text-rose-600 grid place-items-center shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-lime-100 text-lime-700 grid place-items-center shrink-0">
                     <Package size={18} />
                   </div>
                   <div>

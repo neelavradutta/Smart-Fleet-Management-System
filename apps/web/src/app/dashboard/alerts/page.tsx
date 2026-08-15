@@ -95,6 +95,7 @@ export default function AlertsPage() {
           onResolved={load}
           className="h-full min-h-0"
           showOpenCount={false}
+          listKey={`${severity}:${search}`}
         />
       </div>
     </div>

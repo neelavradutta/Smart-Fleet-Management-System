@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Bell } from "lucide-react";
 import { Card } from "@/components/common/Card";
 import { Badge } from "@/components/common/Badge";
@@ -30,11 +30,13 @@ export function AlertsPanel({
   onResolved,
   className,
   showOpenCount = true,
+  listKey = "list",
 }: {
   alerts: AlertItem[];
   onResolved?: () => void;
   className?: string;
   showOpenCount?: boolean;
+  listKey?: string;
 }) {
   const visible = alerts.filter((a) => !isGeofenceAlert(a));
   return (
@@ -55,20 +57,20 @@ export function AlertsPanel({
           </Badge>
         ) : null}
       </div>
-      <div className="space-y-3 overflow-y-auto flex-1 min-h-0 pr-1 sf-hide-scrollbar">
+      <div className="overflow-y-auto flex-1 min-h-0 pr-1 sf-hide-scrollbar">
         {visible.length === 0 ? (
           <p className="text-sm text-slate-500">No alerts — fleet calm.</p>
         ) : (
-          <AnimatePresence initial={false}>
-            {visible.map((a, idx) => (
-              <motion.div
+          <motion.div
+            key={listKey}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="space-y-3"
+          >
+            {visible.map((a) => (
+              <div
                 key={a.id}
-                layout
-                initial={{ opacity: 0, x: 24, scale: 0.98 }}
-                animate={{ opacity: 1, x: 0, scale: 1 }}
-                exit={{ opacity: 0, x: -16, height: 0 }}
-                transition={{ delay: idx * 0.04, type: "spring", stiffness: 320, damping: 26 }}
-                whileHover={{ scale: 1.015, x: 2 }}
                 className="rounded-xl border border-rose-100 bg-gradient-to-r from-rose-50/80 to-amber-50/50 p-3"
               >
                 <div className="flex items-center gap-2 mb-1">
@@ -103,9 +105,9 @@ export function AlertsPanel({
                     Resolved
                   </span>
                 )}
-              </motion.div>
+              </div>
             ))}
-          </AnimatePresence>
+          </motion.div>
         )}
       </div>
     </Card>
