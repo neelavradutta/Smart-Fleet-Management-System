@@ -7,6 +7,7 @@ import { Badge } from "@/components/common/Badge";
 import { Button } from "@/components/common/Button";
 import { api } from "@/lib/api";
 import { cn } from "@/utils/cn";
+import { hoverLift } from "@/lib/motion";
 
 export type AlertItem = {
   id: string;
@@ -27,6 +28,7 @@ export function isGeofenceAlert(a: AlertItem) {
 
 type AlertChrome = {
   card: string;
+  bar: string;
   badgeTone: "success" | "warning" | "danger" | "info" | "neutral";
   badgeClass?: string;
   typeClass: string;
@@ -36,6 +38,7 @@ type AlertChrome = {
 
 const CRITICAL_CHROME: AlertChrome = {
   card: "rounded-xl border border-slate-200 bg-slate-100 p-3",
+  bar: "bg-red-600",
   badgeTone: "danger",
   badgeClass: "!bg-red-600 !text-white !border-red-600",
   typeClass: "text-xs text-slate-600",
@@ -44,6 +47,7 @@ const CRITICAL_CHROME: AlertChrome = {
 
 const WARNING_CHROME: AlertChrome = {
   card: "rounded-xl border border-yellow-300 bg-yellow-100 p-3",
+  bar: "bg-amber-600",
   badgeTone: "warning",
   badgeClass: "!bg-amber-300 !text-amber-950 !border-amber-400",
   typeClass: "text-xs text-amber-950",
@@ -54,6 +58,7 @@ const WARNING_CHROME: AlertChrome = {
 
 const INFO_CHROME: AlertChrome = {
   card: "rounded-xl border border-sky-200 bg-gradient-to-r from-sky-50 to-cyan-50/80 p-3",
+  bar: "bg-sky-500",
   badgeTone: "info",
   typeClass: "text-xs text-sky-700",
   buttonVariant: "primary",
@@ -63,6 +68,7 @@ function alertChrome(a: AlertItem): AlertChrome {
   if (a.isResolved) {
     return {
       card: "rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50/90 to-lime-50/70 p-3",
+      bar: "bg-emerald-500",
       badgeTone: "success",
       typeClass: "text-xs text-emerald-700",
       buttonVariant: "success",
@@ -126,7 +132,18 @@ export function AlertsPanel({
             {visible.map((a) => {
               const chrome = alertChrome(a);
               return (
-                <div key={a.id} className={chrome.card}>
+                <motion.div
+                  key={a.id}
+                  className={cn("group relative overflow-hidden", chrome.card)}
+                  {...hoverLift}
+                >
+                  <span
+                    aria-hidden
+                    className={cn(
+                      "pointer-events-none absolute top-0 left-0 h-[3px] w-full origin-left scale-x-0 rounded-full transition-transform duration-200 ease-out group-hover:scale-x-100",
+                      chrome.bar,
+                    )}
+                  />
                   <div className="flex items-center gap-2 mb-1">
                     <Badge tone={chrome.badgeTone} className={chrome.badgeClass}>
                       {a.alertSeverity}
@@ -152,7 +169,7 @@ export function AlertsPanel({
                       Resolved
                     </span>
                   )}
-                </div>
+                </motion.div>
               );
             })}
           </motion.div>
