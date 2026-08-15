@@ -217,7 +217,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   className={cn(
                     "sf-icon-tile w-8 h-8",
                     iconTile[link.tint],
-                    link.anim === "truck" || link.anim === "users"
+                    link.anim === "truck" ||
+                    link.anim === "users" ||
+                    link.anim === "file"
                       ? "overflow-hidden"
                       : null,
                   )}
@@ -237,6 +239,43 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         <span className="sf-nav-dash__tile sf-nav-dash__tile--4" />
                       </span>
                     </span>
+                  ) : link.anim === "map" ? (
+                    <svg
+                      className="sf-nav-live"
+                      viewBox="0 0 24 24"
+                      width="16"
+                      height="16"
+                      fill="none"
+                      aria-hidden
+                    >
+                      <g
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <circle
+                          className="sf-nav-live__ping sf-nav-live__ping--1"
+                          cx="12"
+                          cy="8"
+                          r="3.2"
+                        />
+                        <circle
+                          className="sf-nav-live__ping sf-nav-live__ping--2"
+                          cx="12"
+                          cy="8"
+                          r="3.2"
+                        />
+                        <path
+                          className="sf-nav-live__map"
+                          d="M8.714 14h-3.71a1 1 0 0 0-.948.683l-2.004 6A1 1 0 0 0 3 22h18a1 1 0 0 0 .948-1.316l-2-6a1 1 0 0 0-.949-.684h-3.612"
+                        />
+                        <g className="sf-nav-live__pin">
+                          <path d="M18 8c0 3.613-3.869 7.429-5.393 8.795a1 1 0 0 1-1.214 0C9.87 15.429 6 11.613 6 8a6 6 0 0 1 12 0" />
+                          <circle cx="12" cy="8" r="2" />
+                        </g>
+                      </g>
+                    </svg>
                   ) : link.anim === "users" ? (
                     <svg
                       className="sf-nav-users"
@@ -321,10 +360,123 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         <path d="M3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8" />
                         <polyline points="3.29 7 12 12 20.71 7" />
                         <line x1="12" x2="12" y1="22" y2="12" />
-                        <g className="sf-nav-pack__lid">
-                          <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8" />
-                          <path d="m7.5 4.27 9 5.15" />
+                        <path
+                          className="sf-nav-pack__flap sf-nav-pack__flap--n"
+                          d="M12 2.27 20.71 7 12 7Z"
+                        />
+                        <path
+                          className="sf-nav-pack__flap sf-nav-pack__flap--e"
+                          d="M20.71 7 12 12 12 7Z"
+                        />
+                        <path
+                          className="sf-nav-pack__flap sf-nav-pack__flap--s"
+                          d="M12 12 3.29 7 12 7Z"
+                        />
+                        <path
+                          className="sf-nav-pack__flap sf-nav-pack__flap--w"
+                          d="M3.29 7 12 2.27 12 7Z"
+                        />
+                        <path d="m7.5 4.27 9 5.15" className="sf-nav-pack__tape" />
+                        <g className="sf-nav-pack__party">
+                          <circle
+                            className="sf-nav-pack__burst"
+                            cx="12"
+                            cy="8"
+                            r="2.5"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.2"
+                          />
+                          <rect
+                            className="sf-nav-pack__bit sf-nav-pack__bit--1"
+                            x="11.2"
+                            y="7.2"
+                            width="1.6"
+                            height="1.6"
+                            rx="0.25"
+                            fill="currentColor"
+                            stroke="none"
+                          />
+                          <rect
+                            className="sf-nav-pack__bit sf-nav-pack__bit--2"
+                            x="11.2"
+                            y="7.2"
+                            width="1.6"
+                            height="1.6"
+                            rx="0.25"
+                            fill="currentColor"
+                            stroke="none"
+                          />
+                          <rect
+                            className="sf-nav-pack__bit sf-nav-pack__bit--3"
+                            x="11.35"
+                            y="7.1"
+                            width="1.3"
+                            height="1.8"
+                            rx="0.2"
+                            fill="currentColor"
+                            stroke="none"
+                          />
+                          <rect
+                            className="sf-nav-pack__bit sf-nav-pack__bit--4"
+                            x="11.1"
+                            y="7.35"
+                            width="1.8"
+                            height="1.3"
+                            rx="0.2"
+                            fill="currentColor"
+                            stroke="none"
+                          />
+                          <path
+                            className="sf-nav-pack__bit sf-nav-pack__bit--5"
+                            d="M12 6.8v2.4M10.8 8h2.4"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.4"
+                          />
+                          <path
+                            className="sf-nav-pack__bit sf-nav-pack__bit--6"
+                            d="M12 6.8v2.4M10.8 8h2.4"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1.4"
+                          />
                         </g>
+                      </g>
+                    </svg>
+                  ) : link.anim === "file" ? (
+                    <svg
+                      className="sf-nav-file"
+                      viewBox="0 0 24 24"
+                      width="16"
+                      height="16"
+                      fill="none"
+                      aria-hidden
+                    >
+                      <g
+                        className="sf-nav-file__page"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+                        <path d="M14 2v6h6" />
+                        <path
+                          className="sf-nav-file__line sf-nav-file__line--1"
+                          pathLength="1"
+                          d="M8 9h2"
+                        />
+                        <path
+                          className="sf-nav-file__line sf-nav-file__line--2"
+                          pathLength="1"
+                          d="M8 13h8"
+                        />
+                        <path
+                          className="sf-nav-file__line sf-nav-file__line--3"
+                          pathLength="1"
+                          d="M8 17h8"
+                        />
                       </g>
                     </svg>
                   ) : (

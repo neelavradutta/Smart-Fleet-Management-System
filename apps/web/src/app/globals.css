@@ -160,9 +160,24 @@
   animation: sf-nav-dash-spin 4.2s linear forwards;
 }
 
-.group:hover .sf-nav-ico--map,
-.group:focus-visible .sf-nav-ico--map {
-  animation: sf-nav-map 0.85s ease-in-out infinite;
+.group:hover .sf-nav-live__pin,
+.group:focus-visible .sf-nav-live__pin {
+  animation: sf-nav-live-pin 0.55s cubic-bezier(0.34, 1.45, 0.64, 1) forwards;
+}
+
+.group:hover .sf-nav-live__map,
+.group:focus-visible .sf-nav-live__map {
+  animation: sf-nav-live-map 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.group:hover .sf-nav-live__ping--1,
+.group:focus-visible .sf-nav-live__ping--1 {
+  animation: sf-nav-live-ping 1.35s ease-out 0.42s infinite;
+}
+
+.group:hover .sf-nav-live__ping--2,
+.group:focus-visible .sf-nav-live__ping--2 {
+  animation: sf-nav-live-ping 1.35s ease-out 0.85s infinite;
 }
 
 .group:hover .sf-nav-ico--truck,
@@ -190,9 +205,24 @@
   animation: sf-nav-pack-arrive 2.5s cubic-bezier(0.22, 1, 0.36, 1) infinite;
 }
 
-.group:hover .sf-nav-pack__lid,
-.group:focus-visible .sf-nav-pack__lid {
-  animation: sf-nav-pack-lid 2.5s cubic-bezier(0.34, 1.15, 0.64, 1) infinite;
+.group:hover .sf-nav-pack__flap,
+.group:focus-visible .sf-nav-pack__flap {
+  animation: sf-nav-pack-flap 2.5s cubic-bezier(0.34, 1.15, 0.64, 1) infinite;
+}
+
+.group:hover .sf-nav-pack__tape,
+.group:focus-visible .sf-nav-pack__tape {
+  animation: sf-nav-pack-tape 2.5s ease-out infinite;
+}
+
+.group:hover .sf-nav-pack__burst,
+.group:focus-visible .sf-nav-pack__burst {
+  animation: sf-nav-pack-burst 2.5s ease-out infinite;
+}
+
+.group:hover .sf-nav-pack__bit,
+.group:focus-visible .sf-nav-pack__bit {
+  animation: sf-nav-pack-bit 2.5s ease-out infinite;
 }
 
 .group:hover .sf-nav-ico--bell,
@@ -205,9 +235,24 @@
   animation: sf-nav-pulse 1s ease-in-out infinite;
 }
 
-.group:hover .sf-nav-ico--file,
-.group:focus-visible .sf-nav-ico--file {
-  animation: sf-nav-file 0.8s ease-in-out infinite;
+.group:hover .sf-nav-file__page,
+.group:focus-visible .sf-nav-file__page {
+  animation: sf-nav-file-page 2.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+.group:hover .sf-nav-file__line--1,
+.group:focus-visible .sf-nav-file__line--1 {
+  animation: sf-nav-file-line-1 2.2s ease-out infinite;
+}
+
+.group:hover .sf-nav-file__line--2,
+.group:focus-visible .sf-nav-file__line--2 {
+  animation: sf-nav-file-line-2 2.2s ease-out infinite;
+}
+
+.group:hover .sf-nav-file__line--3,
+.group:focus-visible .sf-nav-file__line--3 {
+  animation: sf-nav-file-line-3 2.2s ease-out infinite;
 }
 
 .sf-nav-dash {
@@ -397,9 +442,77 @@
   transform-origin: center;
 }
 
-.sf-nav-pack__lid {
+.sf-nav-pack__flap {
+  transform-box: view-box;
+}
+
+.sf-nav-pack__flap--n {
+  transform-origin: 16.36px 4.64px;
+}
+
+.sf-nav-pack__flap--e {
+  transform-origin: 16.36px 9.5px;
+}
+
+.sf-nav-pack__flap--s {
+  transform-origin: 7.64px 9.5px;
+}
+
+.sf-nav-pack__flap--w {
+  transform-origin: 7.64px 4.64px;
+}
+
+.sf-nav-pack__tape {
+  transform-box: view-box;
+  transform-origin: 12px 7px;
+}
+
+.sf-nav-pack__burst {
   transform-box: view-box;
   transform-origin: 12px 8px;
+  opacity: 0;
+}
+
+.sf-nav-pack__bit {
+  transform-box: fill-box;
+  transform-origin: center;
+  opacity: 0;
+}
+
+.sf-nav-pack__bit--1 {
+  --dx: 0px;
+  --dy: -9px;
+  --rot: 12deg;
+}
+
+.sf-nav-pack__bit--2 {
+  --dx: 0px;
+  --dy: 9px;
+  --rot: -18deg;
+}
+
+.sf-nav-pack__bit--3 {
+  --dx: 9px;
+  --dy: 0px;
+  --rot: 55deg;
+}
+
+.sf-nav-pack__bit--4 {
+  --dx: -9px;
+  --dy: 0px;
+  --rot: -50deg;
+}
+
+.sf-nav-pack__bit--5 {
+  --dx: 6px;
+  --dy: -6px;
+  --rot: 20deg;
+}
+
+.sf-nav-pack__bit--6 {
+  --dx: -6px;
+  --dy: 6px;
+  --rot: -22deg;
 }
 
 @keyframes sf-nav-pack-arrive {
@@ -425,18 +538,77 @@
   }
 }
 
-@keyframes sf-nav-pack-lid {
+@keyframes sf-nav-pack-flap {
   0%,
   28% {
     transform: rotate(0deg);
   }
   46%,
   60% {
-    transform: rotate(-58deg);
+    transform: rotate(180deg);
   }
   78%,
   100% {
     transform: rotate(0deg);
+  }
+}
+
+@keyframes sf-nav-pack-tape {
+  0%,
+  28% {
+    opacity: 1;
+  }
+  40%,
+  72% {
+    opacity: 0;
+  }
+  82%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes sf-nav-pack-burst {
+  0%,
+  42% {
+    transform: scale(0.15);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.85);
+    opacity: 0.95;
+  }
+  64%,
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+@keyframes sf-nav-pack-bit {
+  0%,
+  42% {
+    transform: translate(0, 0) rotate(0deg) scale(0.2);
+    opacity: 0;
+  }
+  52% {
+    transform: translate(var(--dx), var(--dy)) rotate(var(--rot)) scale(1.15);
+    opacity: 1;
+  }
+  68% {
+    transform: translate(
+        calc(var(--dx) * 1.15),
+        calc(var(--dy) * 1.2)
+      )
+      rotate(var(--rot))
+      scale(0.7);
+    opacity: 0.35;
+  }
+  74%,
+  100% {
+    transform: translate(calc(var(--dx) * 1.2), calc(var(--dy) * 1.25))
+      scale(0.2);
+    opacity: 0;
   }
 }
 
@@ -487,16 +659,82 @@
   }
 }
 
-@keyframes sf-nav-file {
-  0%,
+.sf-nav-file {
+  display: block;
+  overflow: hidden;
+}
+
+.sf-nav-file__page {
+  transform-box: view-box;
+  transform-origin: center;
+}
+
+.sf-nav-file__line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+
+@keyframes sf-nav-file-page {
+  0% {
+    transform: translateX(-14px);
+    opacity: 0;
+  }
+  18% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  86% {
+    transform: translateX(0);
+    opacity: 1;
+  }
   100% {
-    transform: perspective(52px) rotateY(0deg) translateY(0);
+    transform: translateX(-14px);
+    opacity: 0;
   }
-  35% {
-    transform: perspective(52px) rotateY(-32deg) translateY(-2px);
+}
+
+@keyframes sf-nav-file-line-1 {
+  0%,
+  20% {
+    stroke-dashoffset: 1;
   }
-  65% {
-    transform: perspective(52px) rotateY(14deg) translateY(-1px);
+  34%,
+  86% {
+    stroke-dashoffset: 0;
+  }
+  94%,
+  100% {
+    stroke-dashoffset: 1;
+  }
+}
+
+@keyframes sf-nav-file-line-2 {
+  0%,
+  34% {
+    stroke-dashoffset: 1;
+  }
+  50%,
+  86% {
+    stroke-dashoffset: 0;
+  }
+  94%,
+  100% {
+    stroke-dashoffset: 1;
+  }
+}
+
+@keyframes sf-nav-file-line-3 {
+  0%,
+  50% {
+    stroke-dashoffset: 1;
+  }
+  66%,
+  86% {
+    stroke-dashoffset: 0;
+  }
+  94%,
+  100% {
+    stroke-dashoffset: 1;
   }
 }
 
@@ -511,8 +749,18 @@
   .group:focus-visible .sf-nav-users__p,
   .group:hover .sf-nav-pack__arrive,
   .group:focus-visible .sf-nav-pack__arrive,
-  .group:hover .sf-nav-pack__lid,
-  .group:focus-visible .sf-nav-pack__lid {
+  .group:hover .sf-nav-pack__flap,
+  .group:focus-visible .sf-nav-pack__flap,
+  .group:hover .sf-nav-pack__tape,
+  .group:focus-visible .sf-nav-pack__tape,
+  .group:hover .sf-nav-pack__burst,
+  .group:focus-visible .sf-nav-pack__burst,
+  .group:hover .sf-nav-pack__bit,
+  .group:focus-visible .sf-nav-pack__bit,
+  .group:hover .sf-nav-file__page,
+  .group:focus-visible .sf-nav-file__page,
+  .group:hover .sf-nav-file__line,
+  .group:focus-visible .sf-nav-file__line {
     animation: none;
   }
 }
