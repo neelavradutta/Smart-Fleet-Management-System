@@ -34,10 +34,35 @@ type AlertChrome = {
   buttonClass?: string;
 };
 
+const CRITICAL_CHROME: AlertChrome = {
+  card: "rounded-xl border border-slate-200 bg-slate-100 p-3",
+  badgeTone: "danger",
+  badgeClass: "!bg-red-600 !text-white !border-red-600",
+  typeClass: "text-xs text-slate-600",
+  buttonVariant: "success",
+};
+
+const WARNING_CHROME: AlertChrome = {
+  card: "rounded-xl border border-yellow-300 bg-yellow-100 p-3",
+  badgeTone: "warning",
+  badgeClass: "!bg-amber-300 !text-amber-950 !border-amber-400",
+  typeClass: "text-xs text-amber-950",
+  buttonVariant: "tan",
+  buttonClass:
+    "!bg-amber-600 hover:!bg-amber-700 !shadow-none !border-amber-600 !text-white",
+};
+
+const INFO_CHROME: AlertChrome = {
+  card: "rounded-xl border border-sky-200 bg-gradient-to-r from-sky-50 to-cyan-50/80 p-3",
+  badgeTone: "info",
+  typeClass: "text-xs text-sky-700",
+  buttonVariant: "primary",
+};
+
 function alertChrome(a: AlertItem): AlertChrome {
   if (a.isResolved) {
     return {
-      card: "rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50/90 to-lime-50/70 p-3 border-l-4 border-l-emerald-500",
+      card: "rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50/90 to-lime-50/70 p-3",
       badgeTone: "success",
       typeClass: "text-xs text-emerald-700",
       buttonVariant: "success",
@@ -46,73 +71,13 @@ function alertChrome(a: AlertItem): AlertChrome {
   const type = (a.alertType ?? "").toUpperCase();
   const sev = (a.alertSeverity ?? "").toUpperCase();
 
-  if (type.includes("BREAKDOWN")) {
-    return {
-      card: "rounded-xl border border-rose-200 bg-gradient-to-r from-rose-50 to-rose-100/80 p-3 border-l-4 border-l-rose-500",
-      badgeTone: "danger",
-      typeClass: "text-xs text-rose-600",
-      buttonVariant: "danger",
-    };
-  }
-  if (type.includes("HARSH") || type.includes("SPEED")) {
-    return {
-      card: "rounded-xl border border-orange-200 bg-gradient-to-r from-orange-50 to-amber-50/80 p-3 border-l-4 border-l-orange-500",
-      badgeTone: "warning",
-      badgeClass: "bg-orange-100 text-orange-800 border-orange-300",
-      typeClass: "text-xs text-orange-700",
-      buttonVariant: "danger",
-      buttonClass:
-        "!bg-orange-500 hover:!bg-orange-600 !shadow-none !border-orange-600 text-white",
-    };
-  }
-  if (type.includes("DELAY")) {
-    return {
-      card: "rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50/80 p-3 border-l-4 border-l-amber-500",
-      badgeTone: "warning",
-      typeClass: "text-xs text-amber-700",
-      buttonVariant: "tan",
-    };
-  }
-  if (type.includes("FUEL")) {
-    return {
-      card: "rounded-xl border border-violet-200 bg-gradient-to-r from-violet-50 to-fuchsia-50/70 p-3 border-l-4 border-l-violet-500",
-      badgeTone: "info",
-      badgeClass: "bg-violet-100 text-violet-800 border-violet-300",
-      typeClass: "text-xs text-violet-700",
-      buttonVariant: "lilac",
-    };
-  }
-  if (type.includes("MAINTENANCE")) {
-    return {
-      card: "rounded-xl border border-sky-200 bg-gradient-to-r from-sky-50 to-cyan-50/80 p-3 border-l-4 border-l-sky-500",
-      badgeTone: "info",
-      typeClass: "text-xs text-sky-700",
-      buttonVariant: "primary",
-    };
-  }
-
-  if (sev === "CRITICAL") {
-    return {
-      card: "rounded-xl border border-rose-200 bg-gradient-to-r from-rose-50 to-rose-100/80 p-3 border-l-4 border-l-rose-500",
-      badgeTone: "danger",
-      typeClass: "text-xs text-rose-600",
-      buttonVariant: "danger",
-    };
+  if (type.includes("BREAKDOWN") || sev === "CRITICAL") {
+    return CRITICAL_CHROME;
   }
   if (sev === "WARNING") {
-    return {
-      card: "rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50/80 p-3 border-l-4 border-l-amber-500",
-      badgeTone: "warning",
-      typeClass: "text-xs text-amber-700",
-      buttonVariant: "tan",
-    };
+    return WARNING_CHROME;
   }
-  return {
-    card: "rounded-xl border border-sky-200 bg-gradient-to-r from-sky-50 to-cyan-50/80 p-3 border-l-4 border-l-sky-500",
-    badgeTone: "info",
-    typeClass: "text-xs text-sky-700",
-    buttonVariant: "primary",
-  };
+  return INFO_CHROME;
 }
 
 export function AlertsPanel({
