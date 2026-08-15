@@ -67,7 +67,7 @@ export default function AlertsPage() {
             placeholder="Search alerts…"
             aria-label="Search alerts"
             size={36}
-            className="w-auto max-w-full rounded-xl border-rose-200 bg-rose-50/40 pl-9 focus:border-rose-400 focus:ring-rose-400"
+            className="w-auto max-w-full rounded-xl border-rose-200 bg-white pl-9 focus:border-rose-400 focus:ring-rose-400"
           />
         </label>
         {SEVERITY.map((s) => (

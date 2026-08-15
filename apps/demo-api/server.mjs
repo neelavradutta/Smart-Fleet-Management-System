@@ -425,6 +425,14 @@ const alerts = [
   },
   {
     id: randomUUID(),
+    alertType: "BREAKDOWN",
+    alertSeverity: "CRITICAL",
+    alertMessage: "VAN-021 overheating — Bandra West flyover",
+    isResolved: false,
+    createdAt: new Date(Date.now() - 240000).toISOString(),
+  },
+  {
+    id: randomUUID(),
     alertType: "HARSH_DRIVING",
     alertSeverity: "WARNING",
     alertMessage: "Speeding 92 > 80 on VAN-014",
@@ -433,11 +441,27 @@ const alerts = [
   },
   {
     id: randomUUID(),
+    alertType: "HARSH_DRIVING",
+    alertSeverity: "WARNING",
+    alertMessage: "Harsh braking on TRK-003 — Sion junction",
+    isResolved: false,
+    createdAt: new Date(Date.now() - 720000).toISOString(),
+  },
+  {
+    id: randomUUID(),
     alertType: "DELAY",
     alertSeverity: "WARNING",
     alertMessage: "RT-1002 running 24 min behind planned end",
     isResolved: false,
     createdAt: new Date(Date.now() - 900000).toISOString(),
+  },
+  {
+    id: randomUUID(),
+    alertType: "DELAY",
+    alertSeverity: "WARNING",
+    alertMessage: "RT-1005 delayed 18 min — WW Highway congestion",
+    isResolved: false,
+    createdAt: new Date(Date.now() - 1100000).toISOString(),
   },
   {
     id: randomUUID(),
@@ -462,6 +486,14 @@ const alerts = [
     alertMessage: "TRK-001 PUC expires in 12 days",
     isResolved: false,
     createdAt: new Date(Date.now() - 7200000).toISOString(),
+  },
+  {
+    id: randomUUID(),
+    alertType: "MAINTENANCE_DUE",
+    alertSeverity: "INFO",
+    alertMessage: "VAN-008 tyre rotation due this week",
+    isResolved: false,
+    createdAt: new Date(Date.now() - 8400000).toISOString(),
   },
 ];
 
@@ -1225,15 +1257,20 @@ app.patch("/api/v1/drivers/:id", (req, res) => {
   if (!d) return res.status(404).json({ error: "Not found" });
   res.json({ data: d });
 });
-app.get("/api/v1/alerts", (_req, res) =>
+app.get("/api/v1/alerts", (_req, res) => {
+  const hidden = (a) =>
+    String(a.alertType ?? "").toUpperCase().includes("GEOFENCE") ||
+    /geofence|restricted zone/i.test(String(a.alertMessage ?? ""));
+  const open = alerts.filter((a) => !a.isResolved && !hidden(a));
+  if (open.length === 0) {
+    for (const a of alerts) {
+      if (!hidden(a)) a.isResolved = false;
+    }
+  }
   res.json({
-    data: alerts.filter(
-      (a) =>
-        !String(a.alertType ?? "").toUpperCase().includes("GEOFENCE") &&
-        !/geofence|restricted zone/i.test(String(a.alertMessage ?? "")),
-    ),
-  }),
-);
+    data: alerts.filter((a) => !hidden(a)),
+  });
+});
 app.get("/api/v1/geofences", (_req, res) => res.json({ data: geofences }));
 app.get("/api/v1/routes", (_req, res) => res.json({ data: routes }));
 app.post("/api/v1/routes", (req, res) => {
