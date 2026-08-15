@@ -29,10 +29,12 @@ export function AlertsPanel({
   alerts,
   onResolved,
   className,
+  showOpenCount = true,
 }: {
   alerts: AlertItem[];
   onResolved?: () => void;
   className?: string;
+  showOpenCount?: boolean;
 }) {
   const visible = alerts.filter((a) => !isGeofenceAlert(a));
   return (
@@ -47,9 +49,11 @@ export function AlertsPanel({
         <h3 className="font-display text-lg font-semibold text-slate-900">
           Live Alerts
         </h3>
-        <Badge tone="danger" pulse className="ml-auto">
-          {visible.filter((a) => !a.isResolved).length} open
-        </Badge>
+        {showOpenCount ? (
+          <Badge tone="danger" pulse className="ml-auto">
+            {visible.filter((a) => !a.isResolved).length} open
+          </Badge>
+        ) : null}
       </div>
       <div className="space-y-3 overflow-y-auto flex-1 min-h-0 pr-1 sf-hide-scrollbar">
         {visible.length === 0 ? (

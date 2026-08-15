@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { api } from "@/lib/api";
 import { AlertsPanel, type AlertItem, isGeofenceAlert } from "@/components/dashboard/AlertsPanel";
+import { Badge } from "@/components/common/Badge";
 import { Button } from "@/components/common/Button";
 import { PageHero } from "@/components/common/PageHero";
 
@@ -41,11 +42,15 @@ export default function AlertsPage() {
     });
   }, [rows, search, severity]);
 
+  const openCount = rows.filter(
+    (a) => !isGeofenceAlert(a) && !a.isResolved,
+  ).length;
+
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3 [&>*]:!mb-0">
       <PageHero
         theme="coral"
-        title="Alert inbox"
+        title="Live Alerts"
         subtitle="Speeding, fuel, maintenance — resolve in place."
       />
 
@@ -75,6 +80,13 @@ export default function AlertsPage() {
             {s.label}
           </Button>
         ))}
+        <Badge
+          tone="danger"
+          pulse
+          className="ml-auto rounded-xl px-3 py-1.5 text-sm"
+        >
+          {openCount} open
+        </Badge>
       </div>
 
       <div className="min-h-0 flex-1 overflow-hidden">
@@ -82,6 +94,7 @@ export default function AlertsPage() {
           alerts={filtered}
           onResolved={load}
           className="h-full min-h-0"
+          showOpenCount={false}
         />
       </div>
     </div>
