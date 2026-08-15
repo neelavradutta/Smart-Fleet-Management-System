@@ -170,19 +170,29 @@
   animation: sf-nav-truck 0.95s cubic-bezier(0.45, 0, 0.2, 1) infinite;
 }
 
-.group:hover .sf-nav-ico--users,
-.group:focus-visible .sf-nav-ico--users {
-  animation: sf-nav-users 0.8s ease-in-out infinite;
+.group:hover .sf-nav-users__p--1,
+.group:focus-visible .sf-nav-users__p--1 {
+  animation: sf-nav-users-p1 2.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+.group:hover .sf-nav-users__p--2,
+.group:focus-visible .sf-nav-users__p--2 {
+  animation: sf-nav-users-p2 2.8s cubic-bezier(0.22, 1, 0.36, 1) infinite;
 }
 
 .group:hover .sf-nav-route__rope,
 .group:focus-visible .sf-nav-route__rope {
-  animation: sf-nav-route-draw 1.55s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  animation: sf-nav-route-draw 2.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
 }
 
-.group:hover .sf-nav-ico--package,
-.group:focus-visible .sf-nav-ico--package {
-  animation: sf-nav-package 0.75s cubic-bezier(0.34, 1.4, 0.64, 1) infinite;
+.group:hover .sf-nav-pack__arrive,
+.group:focus-visible .sf-nav-pack__arrive {
+  animation: sf-nav-pack-arrive 2.5s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+.group:hover .sf-nav-pack__lid,
+.group:focus-visible .sf-nav-pack__lid {
+  animation: sf-nav-pack-lid 2.5s cubic-bezier(0.34, 1.15, 0.64, 1) infinite;
 }
 
 .group:hover .sf-nav-ico--bell,
@@ -298,19 +308,54 @@
   }
 }
 
-@keyframes sf-nav-users {
-  0%,
-  100% {
-    transform: rotate(0deg) translateY(0);
+.sf-nav-users {
+  display: block;
+  overflow: hidden;
+}
+
+.sf-nav-users__p {
+  transform-box: view-box;
+  transform-origin: center;
+}
+
+@keyframes sf-nav-users-p1 {
+  0% {
+    transform: translateX(-16px);
+    opacity: 0;
   }
   22% {
-    transform: rotate(-14deg) translateY(-1px);
+    transform: translateX(0);
+    opacity: 1;
   }
-  48% {
-    transform: rotate(12deg) translateY(-2px);
+  62% {
+    transform: translateX(0);
+    opacity: 1;
   }
-  72% {
-    transform: rotate(-6deg) translateY(0);
+  88%,
+  100% {
+    transform: translateX(16px);
+    opacity: 0;
+  }
+}
+
+@keyframes sf-nav-users-p2 {
+  0%,
+  22% {
+    transform: translateX(-16px);
+    opacity: 0;
+  }
+  44% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  62% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  88%,
+  100% {
+    transform: translateX(16px);
+    opacity: 0;
   }
 }
 
@@ -331,28 +376,67 @@
   42% {
     stroke-dashoffset: 0;
   }
-  78% {
+  50% {
     stroke-dashoffset: 0;
   }
-  79%,
+  92% {
+    stroke-dashoffset: -1;
+  }
   100% {
-    stroke-dashoffset: 1;
+    stroke-dashoffset: -1;
   }
 }
 
-@keyframes sf-nav-package {
-  0%,
+.sf-nav-pack {
+  display: block;
+  overflow: visible;
+}
+
+.sf-nav-pack__arrive {
+  transform-box: view-box;
+  transform-origin: center;
+}
+
+.sf-nav-pack__lid {
+  transform-box: view-box;
+  transform-origin: 12px 8px;
+}
+
+@keyframes sf-nav-pack-arrive {
+  0% {
+    transform: translateY(-15px) scale(0.84);
+    opacity: 0;
+  }
+  16% {
+    transform: translateY(1px) scale(1.05);
+    opacity: 1;
+  }
+  24% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  84% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
   100% {
-    transform: translateY(0) rotate(0deg) scale(1);
+    transform: translateY(-15px) scale(0.88);
+    opacity: 0;
   }
+}
+
+@keyframes sf-nav-pack-lid {
+  0%,
   28% {
-    transform: translateY(-7px) rotate(-10deg) scale(1.08);
+    transform: rotate(0deg);
   }
-  48% {
-    transform: translateY(0) rotate(8deg) scale(1);
+  46%,
+  60% {
+    transform: rotate(-58deg);
   }
-  62% {
-    transform: translateY(-3px) rotate(-4deg) scale(1.04);
+  78%,
+  100% {
+    transform: rotate(0deg);
   }
 }
 
@@ -422,7 +506,13 @@
   .group:hover .sf-nav-dash__arm,
   .group:focus-visible .sf-nav-dash__arm,
   .group:hover .sf-nav-route__rope,
-  .group:focus-visible .sf-nav-route__rope {
+  .group:focus-visible .sf-nav-route__rope,
+  .group:hover .sf-nav-users__p,
+  .group:focus-visible .sf-nav-users__p,
+  .group:hover .sf-nav-pack__arrive,
+  .group:focus-visible .sf-nav-pack__arrive,
+  .group:hover .sf-nav-pack__lid,
+  .group:focus-visible .sf-nav-pack__lid {
     animation: none;
   }
 }

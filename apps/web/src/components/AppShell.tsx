@@ -217,7 +217,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   className={cn(
                     "sf-icon-tile w-8 h-8",
                     iconTile[link.tint],
-                    link.anim === "truck" && "overflow-hidden",
+                    link.anim === "truck" || link.anim === "users"
+                      ? "overflow-hidden"
+                      : null,
                   )}
                 >
                   {link.anim === "dash" ? (
@@ -235,6 +237,36 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         <span className="sf-nav-dash__tile sf-nav-dash__tile--4" />
                       </span>
                     </span>
+                  ) : link.anim === "users" ? (
+                    <svg
+                      className="sf-nav-users"
+                      viewBox="0 0 24 24"
+                      width="16"
+                      height="16"
+                      fill="none"
+                      aria-hidden
+                    >
+                      <g
+                        className="sf-nav-users__p sf-nav-users__p--1"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+                      </g>
+                      <g
+                        className="sf-nav-users__p sf-nav-users__p--2"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M16 3.128a4 4 0 0 1 0 7.744" />
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+                      </g>
+                    </svg>
                   ) : link.anim === "route" ? (
                     <svg
                       className="sf-nav-route"
@@ -269,6 +301,31 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         stroke="currentColor"
                         strokeWidth="2"
                       />
+                    </svg>
+                  ) : link.anim === "package" ? (
+                    <svg
+                      className="sf-nav-pack"
+                      viewBox="0 0 24 24"
+                      width="16"
+                      height="16"
+                      fill="none"
+                      aria-hidden
+                    >
+                      <g
+                        className="sf-nav-pack__arrive"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16V8" />
+                        <polyline points="3.29 7 12 12 20.71 7" />
+                        <line x1="12" x2="12" y1="22" y2="12" />
+                        <g className="sf-nav-pack__lid">
+                          <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8" />
+                          <path d="m7.5 4.27 9 5.15" />
+                        </g>
+                      </g>
                     </svg>
                   ) : (
                     <Icon
