@@ -49,6 +49,7 @@ export function LiveMetricTile({
   fx = "classic",
   hoverBar,
   hoverFilm,
+  bumpSize = "sm",
 }: {
   label: string;
   icon: LucideIcon;
@@ -69,6 +70,7 @@ export function LiveMetricTile({
   fx?: "classic" | "polished";
   hoverBar?: string;
   hoverFilm?: string;
+  bumpSize?: "sm" | "lg";
 }) {
   const polished = fx === "polished";
   const [target, setTarget] = useState(base);
@@ -77,9 +79,11 @@ export function LiveMetricTile({
   const display = useTransform(mv, (v) => formatValue(Math.round(v)));
   const targetRef = useRef(base);
   const cancelledRef = useRef(false);
+  const digitPrevRef = useRef(base);
 
   useEffect(() => {
     targetRef.current = base;
+    digitPrevRef.current = base;
     setTarget(base);
     mv.set(base);
     setBump(null);
@@ -162,7 +166,11 @@ export function LiveMetricTile({
   ]);
 
   useEffect(() => {
-    if (reduce) {
+    digitPrevRef.current = Math.round(target);
+  }, [target]);
+
+  useEffect(() => {
+    if (reduce || bumpSize === "lg") {
       mv.set(target);
       return;
     }
@@ -171,9 +179,12 @@ export function LiveMetricTile({
       ease: [0.22, 1, 0.36, 1],
     });
     return () => ctrl.stop();
-  }, [target, mv, reduce, polished]);
+  }, [target, mv, reduce, polished, bumpSize]);
 
   const down = (bump?.delta ?? 0) < 0;
+  const digit = Math.round(target);
+  const digitFlip = bumpSize === "lg";
+  const digitDown = digit < digitPrevRef.current;
 
   if (!polished) {
     const hoverFx = Boolean(hoverBar || hoverFilm);
@@ -215,9 +226,43 @@ export function LiveMetricTile({
         <p className="relative z-10 text-[11px] uppercase tracking-wide text-slate-800">
           {label}
         </p>
-        <motion.p className="relative z-10 text-lg font-semibold text-slate-900 leading-tight tabular-nums">
-          {display}
-        </motion.p>
+        <p className="relative z-10 h-7 overflow-hidden text-lg font-semibold leading-tight tabular-nums">
+          {digitFlip && !reduce ? (
+            <AnimatePresence initial={false}>
+              <motion.span
+                key={digit}
+                initial={{
+                  y: digitDown ? -18 : 18,
+                  opacity: 0,
+                  scale: 0.78,
+                  filter: "blur(5px)",
+                  color: digitDown ? "#e11d48" : "#059669",
+                }}
+                animate={{
+                  y: 0,
+                  opacity: 1,
+                  scale: [0.9, 1.16, 1],
+                  filter: "blur(0px)",
+                  color: "#0f172a",
+                }}
+                exit={{
+                  y: digitDown ? 18 : -18,
+                  opacity: 0,
+                  scale: 0.78,
+                  filter: "blur(4px)",
+                }}
+                transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                className="absolute inset-0 grid place-items-center"
+              >
+                {formatValue(digit)}
+              </motion.span>
+            </AnimatePresence>
+          ) : (
+            <motion.span className="grid h-full place-items-center text-slate-900">
+              {display}
+            </motion.span>
+          )}
+        </p>
 
         <AnimatePresence>
           {bump && !reduce ? (
@@ -231,7 +276,10 @@ export function LiveMetricTile({
                 setBump((cur) => (cur?.id === bump.id ? null : cur))
               }
               className={cn(
-                "pointer-events-none absolute right-2 top-9 z-20 rounded-full px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm",
+                "pointer-events-none absolute right-2 top-9 z-20 rounded-full font-bold text-white shadow-sm",
+                bumpSize === "lg"
+                  ? "px-2.5 py-1 text-sm"
+                  : "px-1.5 py-0.5 text-[10px]",
                 down ? (bumpDownClass ?? bumpClass) : bumpClass,
               )}
             >

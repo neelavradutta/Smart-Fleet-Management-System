@@ -108,6 +108,7 @@ export default function RoutesPage() {
           formatBump={(d) => `${d > 0 ? "+" : ""}${d}`}
           hoverBar="bg-amber-500"
           hoverFilm="bg-amber-100/80"
+          bumpSize="lg"
         />
         <LiveMetricTile
           label="Active routes"
@@ -127,6 +128,7 @@ export default function RoutesPage() {
           formatBump={(d) => `${d > 0 ? "+" : ""}${d}`}
           hoverBar="bg-emerald-500"
           hoverFilm="bg-emerald-100/80"
+          bumpSize="lg"
         />
         <LiveMetricTile
           label="Upcoming routes"
@@ -146,6 +148,7 @@ export default function RoutesPage() {
           formatBump={(d) => `${d > 0 ? "+" : ""}${d}`}
           hoverBar="bg-sky-500"
           hoverFilm="bg-sky-100/80"
+          bumpSize="lg"
         />
       </div>
 
