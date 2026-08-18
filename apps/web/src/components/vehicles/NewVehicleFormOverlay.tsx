@@ -177,8 +177,6 @@ export function NewVehicleFormOverlay({
       );
       onCreated({
         ...res.data,
-        healthScore: 88,
-        fuelLevel: 70,
       });
       onClose();
     } catch (err) {

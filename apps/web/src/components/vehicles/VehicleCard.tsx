@@ -52,6 +52,13 @@ export type VehicleCardModel = {
   permitExpiry?: string | null;
   healthScore?: number;
   fuelLevel?: number;
+  odometerKm?: number;
+  totalTrips?: number;
+  totalSpend?: number;
+  fuelSpend?: number;
+  maintenanceSpend?: number;
+  challanSpend?: number;
+  lastGpsSpeed?: number;
   maintenanceDue?: boolean;
 };
 

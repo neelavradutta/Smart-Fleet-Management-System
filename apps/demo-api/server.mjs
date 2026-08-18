@@ -3,6 +3,13 @@ import cors from "cors";
 import { createServer } from "node:http";
 import { Server } from "socket.io";
 import { randomUUID } from "node:crypto";
+import {
+  fillVehicleLive,
+  heuristicPatch,
+  makeVehicleTools,
+  pickAllowed,
+  scoreVehicleWithLlm,
+} from "./vehicleAi.mjs";
 
 const app = express();
 const httpServer = createServer(app);
@@ -246,6 +253,8 @@ const vehicles = [
     permitExpiry: "2025-01-17",
   },
 ];
+
+vehicles.forEach((v, i) => fillVehicleLive(v, i));
 
 const drivers = [
   {
@@ -992,6 +1001,24 @@ function applyDriverPatch(id, patch = {}, source = "software") {
   return d;
 }
 
+function applyVehiclePatch(id, patch = {}, source = "software") {
+  const v = vehicles.find((x) => x.id === id);
+  if (!v) return null;
+  const next = { ...patch };
+  delete next.source;
+  delete next.id;
+  for (const [key, value] of Object.entries(next)) {
+    if (value === undefined) continue;
+    v[key] = value;
+  }
+  v.updatedAt = new Date().toISOString();
+  v.lastUpdateSource = source === "manual" ? "manual" : "software";
+  io.emit("vehicle_update", v);
+  return v;
+}
+
+const vehicleTools = makeVehicleTools(vehicles, applyVehiclePatch);
+
 app.get("/health", (_req, res) => res.json({ ok: true, mode: "demo" }));
 
 app.post("/api/v1/auth/login", (req, res) => {
@@ -1182,9 +1209,29 @@ app.post("/api/v1/vehicles", (req, res) => {
     fitnessCertificate: b.fitnessCertificate ?? null,
     permitStatus: b.permitStatus ?? null,
     permitExpiry: b.permitExpiry ?? null,
+    healthScore: b.healthScore,
+    fuelLevel: b.fuelLevel,
+    odometerKm: b.odometerKm,
+    totalTrips: b.totalTrips,
+    totalSpend: b.totalSpend,
+    fuelSpend: b.fuelSpend,
+    maintenanceSpend: b.maintenanceSpend,
+    challanSpend: b.challanSpend,
   };
+  fillVehicleLive(row, vehicles.length);
   vehicles.unshift(row);
+  io.emit("vehicle_update", row);
   res.status(201).json({ data: row });
+});
+app.get("/api/v1/vehicles/:id", (req, res) => {
+  const v = vehicles.find((x) => x.id === req.params.id);
+  if (!v) return res.status(404).json({ error: "Not found" });
+  res.json({ data: v });
+});
+app.patch("/api/v1/vehicles/:id", (req, res) => {
+  const v = applyVehiclePatch(req.params.id, req.body ?? {}, req.body?.source);
+  if (!v) return res.status(404).json({ error: "Not found" });
+  res.json({ data: v });
 });
 app.get("/api/v1/drivers", (_req, res) => res.json({ data: drivers }));
 app.post("/api/v1/drivers", (req, res) => {
@@ -1569,17 +1616,55 @@ setInterval(() => {
     const lng = Number(v.currentLongitude) + (Math.random() - 0.5) * 0.004;
     v.currentLatitude = lat.toFixed(6);
     v.currentLongitude = lng.toFixed(6);
+    const speed = 20 + Math.random() * 45;
     const payload = {
       vehicleId: v.id,
       latitude: lat,
       longitude: lng,
-      speed: 20 + Math.random() * 45,
+      speed,
       heading: Math.random() * 360,
       timestamp: new Date().toISOString(),
     };
+    v.lastGpsSpeed = speed;
+    v.lastLocationUpdate = payload.timestamp;
+    const kmDelta = (speed * 3.5) / 3600;
+    const fuel = Number(v.fuelLevel ?? 50);
+    applyVehiclePatch(
+      v.id,
+      {
+        lastGpsSpeed: speed,
+        lastLocationUpdate: payload.timestamp,
+        odometerKm: Math.round((Number(v.odometerKm ?? 0) + kmDelta) * 10) / 10,
+        fuelLevel: Math.round(Math.max(0, Math.min(100, fuel - 0.02 - Math.random() * 0.06)) * 10) / 10,
+      },
+      "software",
+    );
     io.emit("location_update", payload);
   }
 }, 3500);
+
+let aiVehicleCursor = 0;
+setInterval(async () => {
+  if (!vehicles.length) return;
+  const id = vehicles[aiVehicleCursor % vehicles.length].id;
+  aiVehicleCursor += 1;
+  const v = vehicleTools.get_vehicle(id);
+  if (!v) return;
+  const ctx = {
+    speed: v.lastGpsSpeed ?? 0,
+    dtSec: 38,
+    skipOdometer: true,
+  };
+  const patch = pickAllowed(await scoreVehicleWithLlm(v, ctx));
+  delete patch.odometerKm;
+  if (Object.keys(patch).length === 0) {
+    const fallback = heuristicPatch(v, ctx);
+    delete fallback.odometerKm;
+    vehicleTools.patch_vehicle(id, fallback, "software");
+    return;
+  }
+  vehicleTools.patch_vehicle(id, patch, "software");
+}, 38_000);
 
 /** Live analytics drift + broadcast */
 setInterval(() => {

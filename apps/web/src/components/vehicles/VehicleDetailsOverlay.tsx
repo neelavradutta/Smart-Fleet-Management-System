@@ -27,6 +27,7 @@ import { Badge } from "@/components/common/Badge";
 import { LiveMetricTile } from "@/components/common/LiveMetricTile";
 import { cn } from "@/utils/cn";
 import type { VehicleCardModel } from "@/components/vehicles/VehicleCard";
+import { missingMetric } from "@/lib/vehicleMetrics";
 
 type ComplianceAlert = {
   id: string;
@@ -173,22 +174,38 @@ function relativeTime(iso?: string | null): string {
 }
 
 function derivedOps(vehicle: VehicleCardModel) {
-  const health = vehicle.healthScore ?? 86;
-  const fuel = vehicle.fuelLevel ?? 62;
   const seed = vehicle.vehicleNumber
     .split("")
     .reduce((a, c) => a + c.charCodeAt(0), 0);
-  const speedKmh =
-    vehicle.status.toLowerCase() === "active" ? 28 + (seed % 42) : 0;
-  const odometerKm = 18000 + (seed % 22000);
+  const live = (
+    value: number | string | null | undefined,
+    fallback: number,
+  ) => {
+    if (missingMetric(value)) return fallback;
+    const n = Number(value);
+    return Number.isFinite(n) ? n : fallback;
+  };
+  const health = live(vehicle.healthScore, 86);
+  const fuel = live(vehicle.fuelLevel, 62);
+  const speedKmh = live(
+    vehicle.lastGpsSpeed,
+    vehicle.status.toLowerCase() === "active" ? 28 + (seed % 42) : 0,
+  );
+  const odometerKm = live(vehicle.odometerKm, 18000 + (seed % 22000));
   const co2TodayKg = Number(
     ((speedKmh > 0 ? 4.2 : 0.3) + (seed % 7) * 0.35).toFixed(1),
   );
-  const totalTrips = 86 + (seed % 240);
-  const fuelSpend = 85000 + (seed % 55) * 2400;
-  const maintenanceSpend = 22000 + (seed % 40) * 1800;
-  const challanSpend = (seed % 9) * 1500;
-  const totalSpend = fuelSpend + maintenanceSpend + challanSpend;
+  const totalTrips = live(vehicle.totalTrips, 86 + (seed % 240));
+  const fuelSpend = live(vehicle.fuelSpend, 85000 + (seed % 55) * 2400);
+  const maintenanceSpend = live(
+    vehicle.maintenanceSpend,
+    22000 + (seed % 40) * 1800,
+  );
+  const challanSpend = live(vehicle.challanSpend, (seed % 9) * 1500);
+  const totalSpend = live(
+    vehicle.totalSpend,
+    fuelSpend + maintenanceSpend + challanSpend,
+  );
   return {
     health,
     fuel,
@@ -430,10 +447,15 @@ export function VehicleDetailsOverlay({
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    const prevPadding = document.body.style.paddingRight;
+    const gutter = window.innerWidth - document.documentElement.clientWidth;
     document.body.style.overflow = "hidden";
+    if (gutter > 0) document.body.style.paddingRight = `${gutter}px`;
     return () => {
       window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
+      document.body.style.overflow = prevOverflow;
+      document.body.style.paddingRight = prevPadding;
     };
   }, [open, onClose]);
 

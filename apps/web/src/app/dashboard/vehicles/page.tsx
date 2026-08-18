@@ -3,7 +3,9 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { io } from "socket.io-client";
 import { api } from "@/lib/api";
+import { mergeVehicle } from "@/lib/vehicleMetrics";
 import {
   VehicleCard,
   type VehicleCardModel,
@@ -26,16 +28,26 @@ function VehiclesPageInner() {
 
   useEffect(() => {
     api<{ data: VehicleCardModel[] }>("/api/v1/vehicles")
-      .then((res) =>
-        setRows(
-          res.data.map((v, i) => ({
-            ...v,
-            healthScore: i === 3 ? 28 : 78 + ((i * 7) % 20),
-            fuelLevel: 40 + ((i * 13) % 55),
-          })),
-        ),
-      )
+      .then((res) => setRows(res.data))
       .catch(console.error);
+  }, []);
+
+  useEffect(() => {
+    const url = process.env.NEXT_PUBLIC_WS_URL ?? "http://localhost:3001";
+    const socket = io(url, { transports: ["websocket", "polling"] });
+    const onUpdate = (row: VehicleCardModel) => {
+      setRows((prev) =>
+        prev.map((v) => (v.id === row.id ? mergeVehicle(v, row) : v)),
+      );
+      setSelected((sel) =>
+        sel && sel.id === row.id ? mergeVehicle(sel, row) : sel,
+      );
+    };
+    socket.on("vehicle_update", onUpdate);
+    return () => {
+      socket.off("vehicle_update", onUpdate);
+      socket.disconnect();
+    };
   }, []);
 
   useEffect(() => {
@@ -119,11 +131,10 @@ function VehiclesPageInner() {
       </div>
 
       <div ref={listRef} className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        <AnimatePresence mode="popLayout" initial={false}>
+        <AnimatePresence initial={false}>
           {filtered.map((vehicle, idx) => (
             <motion.div
               key={`${status}-${vehicle.id}`}
-              layout
               initial={{ opacity: 0, x: -12 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, scale: 0.98 }}
